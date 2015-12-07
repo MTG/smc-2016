@@ -50,7 +50,13 @@ finally aligned between teacher and student.
 2. Essentia, an open-source C++ library for audio analysis and audio-based music information retrieval is used to extract vibrato.
 3. A global constraint DTW algorithm is used to align the notes and the segments.
 
+## Credits
 
+This project uses following software
+
+1. [d3.js](http://d3js.org/)
+2. [wavesurfer.js](http://wavesurfer-js.org/)
+3. [Recorder.js](https://github.com/mattdiamond/Recorderjs)
 
 
 
