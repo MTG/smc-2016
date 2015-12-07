@@ -46,19 +46,14 @@ contour is then segmented into ascending, descending, flat and vibrato
 parts for the purpose of finer analysis. The notes and segments are 
 finally aligned between teacher and student.
 
-## Resources
-
-1. pYIN, a pitch tracking and note transcription algorithm is used to extract the F0 pitch contour and transcribe the notes.
-2. Essentia, an open-source C++ library for audio analysis and audio-based music information retrieval is used to extract vibrato.
-3. A global constraint DTW algorithm is used to align the notes and the segments.
-
 ## Credits
 
 This project uses following software
 
-1. [d3.js](http://d3js.org/)
-2. [wavesurfer.js](http://wavesurfer-js.org/)
-3. [Recorder.js](https://github.com/mattdiamond/Recorderjs)
+1. [pYIN](https://code.soundsoftware.ac.uk/projects/pyin), a pitch tracking and note transcription algorithm is used to extract the F0 pitch contour and transcribe the notes.
+2. [Essentia](http://essentia.upf.edu/), an open-source C++ library for audio analysis and audio-based music information retrieval is used to extract vibrato.
+3. A global constraint DTW algorithm is used to align the notes and the segments.
+4. Interface: [d3.js](http://d3js.org/), [wavesurfer.js](http://wavesurfer-js.org/), [Recorder.js](https://github.com/mattdiamond/Recorderjs), [lamejs](https://github.com/zhuker/lamejs), [AngularJS](https://angularjs.org/)
 
 
 
