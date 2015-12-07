@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html lang="en" ng-app="hamrSJ">
+    <style>
+        body { font: 12px Arial;}
+        
+/*        
+        path { 
+            stroke: PaleVioletRed;
+            stroke-width: 2;
+            fill: none;
+        }
+*/
+        
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: grey;
+            stroke-width: 1;
+            shape-rendering: crispEdges;
+        }
+    </style>
+
+    <head>
+        <title>Jingju Education Demo</title>
+        <script type="text/javascript" src="thirdparty/d3/d3.js" charset="utf-8"></script>
+        <script type="text/javascript" src="thirdparty/wavesurfer.min.js"></script>
+	<script type="text/javascript" src="thirdparty/angular.min.js"></script>
+	<script type="text/javascript" src="thirdparty/recorder.js"></script>
+        <script type="text/javascript" src="thirdparty/app.js"></script>
+        <script src="thirdparty/jquery.min.js"></script>
+        <script src="thirdparty/lame.min.js"></script>
+        <script type="text/javascript" src="path.js"></script>
+    </head>
+
+    <body ng-controller="SJController as sj">
+        <!-- Layout -->
+        <div id="description" style="position:relative; top:0px; left:0px; margin:0 auto;">
+            <h1>Beijing Opera Singing Intonation Analysis and Education Tool<a href="http://compmusic.upf.edu/" target="_blank"><img src="images/CompMusicLogo.png" alt="CompMusic Logo" style="float:right;width:100px;height:100px;"></a></h1>
+	    <p style="font-size:14px"><br>Rong Gong, Yile Yang (rong.gong@upf.edu, yile.yang01@estudiant.upf.edu)</p>
+	    <p style="font-size:14px"><b>Music Technology Group, Universitat Pompeu Fabra, Barcelona</b><br><br></p>
+            <h2>Summary</h2>
+	    <p style="font-size:14px; margin:10px;">This is the demonstration of a singing intonation analysis and education tool specially developed for phrase-level Beijing opera singing training. It lies within the domain “Audio and Acoustic Signal Processing”. The functionality of this tool is to analyse the singing intonation of the student and reveal interactively his/her problem on both note level and F0 contour’s segment level by the comparison with the teacher. The technologies used in this tool contain F0 extraction, note transcription, F0 contour segmentation and note/segment alignment. F0 contour segmentation developed in Beijing opera context enables us to analyse the subtle details of the intonation. The note/segment alignment facilitate the student to check the corresponding notes or segments and then find the intonation problem on a finer scale. The web page implementation of this tool offers a great potential for self-learning and MOOC application.
+</p>
+	    <br>
+
+        <h2>Beijing opera singing training</h2>
+        <p style="font-size:14px; margin:10px;">In professional Beijing opera singing training, the teacher has absolute authority. The teacher's singing is seen as the standard to which the student's imitation should be as close as possible. The training process is on phrase-level. The teacher sings firstly one short phrase which is usually less than 8 syllables, then the student imitates this phrase. Finally, the teacher will give comments or suggestions from the perspectives of intonation, rhythm, timbre, loudness and phonation. This training process is shown in the example video below.
+</p>
+        <br>
+
+            <h2>Algorithm</h2>
+	    <p style="font-size:14px; margin:10px;">From the audio recording of the call, the algorithm extracts the F0 pitch contour and transcribes it into notes. The F0 pitch contour is then segmented into ascending, descending, flat and vibrato parts for the purpose of being checked in detail. The notes and segments are finally aligned between teacher and student.</p>
+	    <br>
+            <h2>Instructions</h2>
+	    <p style="font-size:14px; margin:10px;">
+            (Note: This tool currently works best on the latest versions of Chrome and Firefox.)<br><br>
+                1. The tool contains mainly two graphs, one of the teacher, which is the imitation target, and the other of the student, which reflects the student’s singing. By comparing the two graphs, the tool provides useful analysis to help the students to find the difference and improve with practice. Each graph mainly consists of a pitch track (F0 contour) of the singing melody, and MIDI notes derived from the pitch track.<br>
+                2. Hover over the mouse on the graph to highlight current pitch track segment, and the aligned one on the other graph.<br>
+                3. Hover over the mouse on the MIDI note to highlight current note, and the aligned one(s) on the other graph. Click the note to play single note. Shift + Click the note to play aligned note(s).<br>
+                4. Click and hold down the record button to record your own singing. Release the record button when finish, and the student graph will be updated with the analysis of your own singing. (When the page asks for microphone permissions, select "Allow" on Chrome and "Always share" on Firefox, and then reload the page again.)<br>
+                5. There are several training phrases to choose from. Each phrase has a default student example.<br><br>
+		Demo video: <a href="https://youtu.be/GVyDG9Oqf_Q">https://youtu.be/GVyDG9Oqf_Q</a>
+            </p>
+	    <br>
+            <h2>Time for some Beijing opera!</h2>
+	    <br>
+        </div>
+
+        <div style="position:relative; top:0px; right:0px; margin:0 right; float:right;width:30%;">
+	    <br><br>
+            <h2>Please Choose a Phrase:</h2>
+	    <p style="font-size:12px;">
+	        (Phrase names are actual lyrics)
+            </p>
+	    <select onchange="updatePhrase(this.value);">
+	      <option value="01" selected>1. 为国家哪何曾</option>
+	      <option value="02">2. 半日闲空</option>
+	      <option value="03">3. 我也曾征过了塞北西东</option>
+	      <option value="04">4. 官封我节度使</option>
+	      <option value="05">5. 皇王恩重</option>
+	      <option value="06">6. 霎时间身不爽瞌睡</option>
+	      <option value="07">7. 朦胧</option>
+	    </select>
+	    <br><br><br><br>
+            <h2>Tips:</h2>
+	    <p style="font-size:14px; margin:10px;">
+                1. Click note to play single note.<br>
+                2. Shift + Click note to play aligned note(s).<br>
+                3. Click plot or audio to navigate playback.<br>
+                4. Click and hold record button to record your own singing.<br>
+                5. If the plot doesn't show correctly, please try to refresh.<br>
+            </p>
+	</div>
+
+	<div id="area1" style="position:relative; top:0px; left:0px; margin:0 left; width:70%;"></div>
+	<div id="control1" style="position:relative; top:35px; left:0px; margin:0 auto;">
+            <button id="playButton_t" onclick="playButton_t_onclick()" style="text-align: middle;">Play</button>
+	</div>
+	<div id="wave1" style="position:relative; margin:0 left; top:10px; height:30px; border:1px solid lightgrey;"></div>
+
+        <div id="area2" style="position:relative; top:20px; left:0px; margin:0 auto;"></div>
+
+        <div id="additionalInfo" style="position:relative; bottom:0px; right:0px; margin:0 right; float:right;width:30%;">
+            <h3>Source Code:</h3>
+            <a href="https://github.com/MTG/jingju-icassp-2016" target="_blank" style="font-size:14px;">https://github.com/MTG/jingju-icassp-2016</a>
+	</div>
+
+        <div id="control2" style="position:relative; top:55px; left:0px; margin:0 auto;">
+            <button id="playButton_s" onclick="playButton_s_onclick()" style="text-align: middle;">Play</button>
+        </div>
+        <div id="wave2" style="position:relative; margin:0 left; top:30px; height:30px; border:1px solid lightgrey;"></div>
+        <div ng-controller="RecordController as rec" id="control3" style="position:relative; top:55px; left:0px; margin:0 auto;">
+        <button id="recordButton" ng-mousedown="rec.startRecording()" ng-mouseup="rec.stopRecording()" ng-class="{'btn-danger': rec.isRecording(), btn: true}">
+            <!-- <button id="recordButton" onclick="updateData()"> -->
+                <b>Click and hold to record!</b>
+            </button>
+            <b><span id="recordingInfo" style="font-size:14px"> Ready to record.</span></b>
+	    <br><br>
+        </div>
+
+        <!-- Game on! -->
+        <script type="text/javascript">
+
+            // Set the dimensions of the canvas / graph
+            var margin = {top: 50, right: 20, bottom: 40, left: 50},
+                width = 800 - margin.left - margin.right,
+                height = 300 - margin.top - margin.bottom;
+
+            // Set the ranges
+            var x_t = d3.scale.linear().range([0, width]);
+            var y_t = d3.scale.linear().range([height, 0]);
+            var x_s = d3.scale.linear().range([0, width]);
+            var y_s = d3.scale.linear().range([height, 0]);
+            
+            // Define the axes
+            var xAxis_t = d3.svg.axis().scale(x_t)
+                .orient("bottom").ticks(10);
+            var yAxis_t = d3.svg.axis().scale(y_t)
+                .orient("left").ticks(10);
+            var xAxis_s = d3.svg.axis().scale(x_s)
+                .orient("bottom").ticks(10);
+            var yAxis_s = d3.svg.axis().scale(y_s)
+                .orient("left").ticks(10);
+
+        // Teacher plot
+            
+            // Adds the svg canvas
+            var svg1 = d3.select("#area1")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", 
+                          "translate(" + margin.left + "," + margin.top + ")");
+
+            // Plot X axis label
+            svg1.append("text")
+               .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+               .style("text-anchor", "middle")
+               .text("Time");
+
+            // Plot Y axis label
+            svg1.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x",0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Pitch (MIDI)");
+
+            // Plot title
+            svg1.append("text")
+               .attr("transform", "translate(" + (width / 2) + " ," + (0 - 10) + ")")
+               .style("text-anchor", "middle")
+               .style("font-size","20px")
+               .style("font-weight","bold")
+               .text("Teacher");
+
+            // Read pitch segmentation info
+            var pitchSeg_t, pitchSeg_s, pitchSegAlign_T2S, pitchSegAlign_S2T, pitchtrackData_t, pitchtrackData_s;
+            
+            d3.csv(pitchSeg_t_default, function(error, data) {
+            	data.forEach(function(d) {
+            	    d.startTime = +d.startTime;
+            	    d.endTime = +d.endTime;
+            	});
+            
+            	setTimeout(function() {pitchSeg_t = data;}, 50);
+            });
+            
+            d3.csv(pitchSeg_s_default, function(error, data) {
+                data.forEach(function(d) {
+            	    d.startTime = +d.startTime;
+            	    d.endTime = +d.endTime;
+                });
+            
+            	setTimeout(function() {pitchSeg_s = data;}, 50);
+            });
+            
+            d3.csv(pitchSegAlign_T2S_default, function(error, data) {
+                data.forEach(function(d) {
+            	    d.startTime = +d.startTime;
+            	    d.endTime = +d.endTime;
+                });
+            
+            	setTimeout(function() {pitchSegAlign_T2S = data;}, 50);
+            });
+            
+            d3.csv(pitchSegAlign_S2T_default, function(error, data) {
+                data.forEach(function(d) {
+            	    d.startTime = +d.startTime;
+            	    d.endTime = +d.endTime;
+                });
+            
+            	setTimeout(function() {pitchSegAlign_S2T = data;}, 50);
+            });
+
+            // Define the line
+            var pitchtrack1 = d3.svg.line()
+                // .defined(function(d) { return !isNaN(d.pitch); })    // Don't plot silence (pitch value set to NaN)
+                .defined(function(d) { return d.pitch>0 ? true:false; })    // Don't plot silence (negative pitch)
+                .x(function(d) { return x_t(d.time); })
+                .y(function(d) { return y_t(d.pitch); });
+
+            // Plot pitch track
+            // d3.csv("data/teacher_regression_pitchtrack.csv", function(error, data) {
+            d3.csv(pitchtrack_t_default, function(error, data) {
+                data.forEach(function(d) {
+                    d.time = +d.time;
+                    d.pitch = +d.pitch;
+                    d.freq = +d.freq;
+                    d.noteStr = d.noteStr;
+                });
+
+		pitchtrackData_t = data;
+            
+                // Scale the range of the data
+                // x_t.domain([0, d3.max(data, function(d) { return d.time; })]).nice();
+                // y_t.domain([d3.min(data, function(d) { if (d.pitch>0) {return d.pitch;}}), 2 + d3.max(data, function(d) { return d.pitch; })]).nice();
+                x_t.domain([0, d3.max(data, function(d) { return d.time; })]);
+                y_t.domain([d3.min(data, function(d) { if (d.pitch>0) {return d.pitch;}}), 2 + d3.max(data, function(d) { return d.pitch; })]);
+
+                // Add the pitchtrack path.
+                svg1.append("path")
+		    .attr("id", "path_t")
+                    .attr("class", "line")
+                    .attr("d", pitchtrack1(data))
+                    .attr("stroke", "PaleVioletRed")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none");
+
+                // Add the X Axis
+                svg1.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis_t);
+            
+                // Add the Y Axis
+                svg1.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis_t);
+
+		// Create focus line
+		svg1.append("line")
+		    .attr("id", "focus")
+                    .attr("x1", x_t(0))
+                    .attr("y1", height)
+		    .attr("x2", x_t(0))
+		    .attr("y2", 0)
+                    // .attr("fill", "transparent")
+		    .style("stroke", "black")
+		    .style("stroke-dasharray", "1")
+		    .style("display", "none");
+
+		// Create focus point
+		svg1.append("circle")
+		    .attr("id", "focusPoint")
+                    .attr("cx", x_t(0))
+                    .attr("cy", y_t(0))
+                    .attr("r", 3)
+		    .attr("fill", "DarkSlateGray")
+		    .style("display", "none");
+
+		// Functions for mouse events
+		var bisectTime = d3.bisector(function(d) { return d.time; }).left;
+
+		// Initialize current segment flag
+		var curSeg = -1;
+
+		function mousemove() {                            
+                    // var x0 = x_t.invert(d3.mouse(svg1.select("#focusArea").node())[0]),
+                    var x0 = x_t.invert(d3.mouse(this)[0]),
+                        i = bisectTime(data, x0, 1),             
+                        d0 = data[i - 1],              
+                        d1 = data[i],                         
+                        d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+    		    
+		    // Move focus line
+                    svg1.select("#focus")                      
+            		// .attr("x1", d3.mouse(svg1.select("#focusArea").node())[0])
+            		.attr("x1", d3.mouse(this)[0])
+            		.attr("y1", height)
+            		.attr("x2", d3.mouse(this)[0])
+            		.attr("y2", 0)
+            		.attr("fill", "black");
+
+		    // Move focus point
+                    svg1.select("#focusPoint")                      
+            		.attr("cx", d3.mouse(this)[0])
+            		.attr("cy", y_t(d.pitch))
+
+                    // Show pitch information
+                    svg1.select("#info_note")
+            		.attr("fill", "grey")
+            		.text("Note: " + d.pitch.toFixed(1) + '(' + d.noteStr + ')');
+                    svg1.select("#info_freq")
+            		.attr("fill", "grey")
+            		.text("Freq (Hz): " + d.freq.toFixed(1));
+                    svg1.select("#info_time")
+            		.attr("fill", "grey")
+            		.text("Time (s): " + d.time.toFixed(2));
+
+		    // Detect and plot pitch segment
+		    if (x0 >= pitchSeg_t[0].startTime && x0 <= pitchSeg_t[pitchSeg_t.length - 1].endTime) {
+			for (j = 0; j < pitchSeg_t.length; j++) {
+			    if (x0 >= pitchSeg_t[j].startTime && x0 <= pitchSeg_t[j].endTime) {
+                                if (j != curSeg) {
+				    // If seg changes, remove precious one and plot a new one
+				    svg1.select("#currentSeg").remove();
+				    svg2.select("#currentSeg").remove();
+				    curSeg = j;
+
+				    var currentSeg_t = svg1.append("path")
+				    // svg1.append("path")
+					.attr("id", "currentSeg")
+					.attr("d", pitchtrack1(data.filter(function(s) {
+					    return s.time >= pitchSeg_t[j].startTime && s.time <= pitchSeg_t[j].endTime;
+					})))
+					.attr("stroke", "Cyan")
+					.attr("stroke-width", 2)
+					.attr("fill", "none");
+
+				    svg1.select("#focusPoint").moveToFront();
+
+				    // Plot aligned segment
+				    var pairSeg_s = pitchSegAlign_T2S[j].student.split(" ");
+
+				    if (isNaN(pairSeg_s[0])) {break;}
+
+                                    var pairSeg_s_startTime = pitchSeg_s[pairSeg_s[0]].startTime,
+                                        pairSeg_s_endTime = pitchSeg_s[pairSeg_s[pairSeg_s.length-1]].endTime;
+
+				    var idxL = bisectTime(pitchtrackData_s, pairSeg_s_startTime, 1),
+				        idxR = bisectTime(pitchtrackData_s, pairSeg_s_endTime, 1);
+
+				    var currentSeg_s = svg2.append("path")
+					.attr("id", "currentSeg")
+					.attr("d", pitchtrack2(pitchtrackData_s.slice(idxL, idxR)))
+					.attr("stroke", "Cyan")
+					.attr("stroke-width", 2)
+					.attr("fill", "none");
+
+				    // Show focus point on top
+				    svg2.select("#focusPoint").moveToFront();
+				}
+
+                                break;
+			    }
+			}
+		    }
+
+		}
+		
+		// Navigate audio
+		function mouseclick() {                            
+                    var x0 = x_t.invert(d3.mouse(this)[0]);
+                    i = bisectTime(data, x0, 1),              
+                    d0 = data[i - 1],                         
+                    d1 = data[i],                             
+                    d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+		    
+                    var progress = d.time / x_t.domain()[1];
+		    
+                    wavesurfer_t.seekTo(progress);
+		}
+
+		// Create focus detection area
+		svg1.append("rect")
+                    .attr("id", "focusArea")
+		    .attr("class", "overlay")
+		    .attr("width", width)
+		    .attr("height", height)
+		    .attr("fill", "transparent")
+		    .on("mouseover", function() { 
+			                 svg1.select("#focus").style("display", null);
+                                         svg1.select("#focusPoint").style("display", null);
+                                     })
+		    .on("mouseout", function() {
+			                svg1.select("#focus").style("display", "none");
+                                        svg1.select("#focusPoint").style("display", "none");
+			                svg1.select("#info_note").attr("fill", "transparent");
+			                svg1.select("#info_freq").attr("fill", "transparent");
+			                svg1.select("#info_time").attr("fill", "transparent");
+			                svg1.select("#currentSeg").remove();
+			                svg2.select("#currentSeg").remove();
+                                        curSeg = -1;
+		                    })
+		    .on("mousemove", mousemove)
+		    .on("click", mouseclick);
+            });
+
+            // Read alignment dict
+            var dictS2T_note;
+            d3.csv(noteAlign_S2T_default, function(error, data) {
+                data.forEach(function(d) {
+                    d.student = d.student;
+                    d.teacher = d.teacher;
+                });
+
+		dictS2T_note = data;
+	    });
+
+            var dictT2S_note;
+            d3.csv(noteAlign_T2S_default, function(error, data) {
+                data.forEach(function(d) {
+                    d.student = d.student;
+                    d.teacher = d.teacher;
+                });
+
+		dictT2S_note = data;
+	    });
+
+            // Plot MIDI notes
+
+            svg1.append("text")
+                .attr("id", "info_note")
+                .attr("transform", "translate(" + width + " ," + 10 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+            svg1.append("text")
+                .attr("id", "info_freq")
+                .attr("transform", "translate(" + width + " ," + 25 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+            svg1.append("text")
+                .attr("id", "info_time")
+                .attr("transform", "translate(" + width + " ," + 40 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+
+            var MIDInote_t;
+
+            d3.csv(noteSeg_t_default, function(error, data) {
+
+                data.forEach(function(d) {
+                    d.startTime = +d.startTime;
+                    d.pitch = +d.pitch;
+                    d.duration = +d.duration;
+                    d.freq = +d.freq;
+                    d.noteStr = d.noteStr;
+                });
+		
+		MIDInote_t = data;
+
+		// Sometimes plot doesn't show. Delay seems to be a workaround.
+		setTimeout(function() {
+
+	    	var MIDInotes = svg1.selectAll("rect.note")
+                                   .data(data)
+                                   .enter()
+                                   .append("rect")
+                                   .attr("class", "note");
+
+		var MIDInoteOffset = 4;    // The vertical center of the note rect is aligned to the pitch
+	    	MIDInotes.attr("x", function(d) {return x_t(d.startTime);})
+	    	         .attr("y", function(d) {return y_t(d.pitch) - MIDInoteOffset;})
+	    	         .attr("width", function(d) {return x_t(d.duration);})
+	    	         .attr("height", 8)
+		         .attr("fill", "DarkCyan")
+		         .attr("opacity", 0.7)
+		         .attr("id", function(d, i){var noteid = 't'+i; return noteid; })    // Note ID for alignment visualization
+		         .on("mouseover", function(d, i) {
+			                      // Hide focus line
+			                      svg1.select("#focus").style("display", "none");
+			                      // Highlight current note
+			                      d3.select(this).attr("fill", "Purple");
+			                      // Draw note boundary
+			                      var note_t = d.pitch
+			                      var freq_t = d.freq
+			                      var noteStr_t = d.noteStr
+			                      var noteStart_t = Number(d3.select(this).attr("x"));
+			                      var noteStartTime_t = MIDInote_t[i].startTime;
+			                      var noteDuration_t = Number(d3.select(this).attr("width"));
+			                      var noteDurationTime_t = MIDInote_t[i].duration;
+			 		      var noteEnd_t = noteStart_t + noteDuration_t;
+			 		      var noteEndTime_t = noteStartTime_t + noteDurationTime_t;
+
+			                      svg1.append("line")
+			 	                  .attr("id", "noteBoundaryL")
+			 	                  .attr("x1", noteStart_t)
+			 	                  .attr("y1", height)
+			 	                  .attr("x2", noteStart_t)
+			 	                  .attr("y2", 0)
+			 	                  .style("stroke", "grey")
+			 	                  .style("stroke-dasharray", "3");
+			                      svg1.append("line")
+			 	                  .attr("id", "noteBoundaryR")
+			 	                  .attr("x1", noteEnd_t) 
+			 	                  .attr("y1", height)
+			 	                  .attr("x2", noteEnd_t)
+			 	                  .attr("y2", 0)
+			 	                  .style("stroke", "grey")
+			 	                  .style("stroke-dasharray", "3");
+
+			                      // Print note information
+			                      svg1.select("#info_note")
+                                                  .attr("fill", "grey")
+			 	                  .text("Note: " + note_t.toFixed(1) + '(' + noteStr_t + ')');
+			                      svg1.select("#info_freq")
+			                          .attr("fill", "grey")
+			 	                  .text("Freq (Hz): " + freq_t.toFixed(1));
+			                      svg1.select("#info_time")
+			                          .attr("fill", "grey")
+			 	                  .text("Time (s): " + noteStartTime_t.toFixed(2) + ' - ' + (Number(noteStartTime_t.toFixed(2)) + Number(noteDurationTime_t.toFixed(2))).toFixed(2) + ' (' + noteDurationTime_t.toFixed(2) + ')');
+
+			                      // Act on the aligned note from student
+                                              var pair_s = dictT2S_note[i].student.split(" ");
+			                          numPairNotes = pair_s.length;
+
+                                              // In case of multiple notes, print group boundary time
+                                              var noteInfoText = "",
+                                                  freqInfoText = "",
+                                                  groupTimeBoundaryL,
+                                                  groupTimeBoundaryR,
+                                                  groupTimeDuration;
+
+                                              for (n = 0; n < numPairNotes; n++) {
+
+			 			  if (isNaN(pair_s[n])) {continue;}
+
+			 			  d3.select("#s"+pair_s[n]).attr("fill", "Purple");
+			 			  var note_s = MIDInote_s[pair_s[n]].pitch;
+			 			  var freq_s = Number(MIDInote_s[pair_s[n]].freq);
+			 			  var noteStr_s = MIDInote_s[pair_s[n]].noteStr;
+			 			  var noteStart_s = Number(d3.select("#s"+pair_s[n]).attr("x"));
+			 			  var noteStartTime_s = MIDInote_s[pair_s[n]].startTime;
+			 			  var noteDuration_s = Number(d3.select("#s"+pair_s[n]).attr("width"));
+			 			  var noteDurationTime_s = MIDInote_s[pair_s[n]].duration;
+			 			  var noteEnd_s = noteStart_s + noteDuration_s;
+			 			  var noteEndTime_s = noteStartTime_s + noteDurationTime_s;
+
+			 			  svg2.append("line")
+			 	                      .attr("id", "noteBoundaryL" + n)
+			 	                      .attr("x1", noteStart_s)
+			 	                      .attr("y1", height)
+			 	                      .attr("x2", noteStart_s)
+			 	                      .attr("y2", 0)
+			 	                      .style("stroke", "grey")
+			 	                      .style("stroke-dasharray", "3");
+			 			  svg2.append("line")
+			 	                      .attr("id", "noteBoundaryR" + n)
+			 	                      .attr("x1", noteEnd_s) 
+			 	                      .attr("y1", height)
+			 	                      .attr("x2", noteEnd_s)
+			 	                      .attr("y2", 0)
+			 	                      .style("stroke", "grey")
+			 	                      .style("stroke-dasharray", "3");
+
+			 			  // Plot note info
+			 			  if (numPairNotes == 1) {
+			 			      noteInfoText = note_s.toFixed(1) + '(' + noteStr_s + ')';
+			 			      freqInfoText = freq_s.toFixed(1);
+			 			      groupTimeBoundaryL = noteStartTime_s.toFixed(2);
+			 			      groupTimeDuration = noteDurationTime_s.toFixed(2);
+			 			      groupTimeBoundaryR = Number(groupTimeBoundaryL) + Number(groupTimeDuration);
+			 			  } else {  // More than 1 note
+			 			      if (n == 0) {
+			 				  noteInfoText = note_s.toFixed(1) + '(' + noteStr_s + ')';
+			 				  freqInfoText = freq_s.toFixed(1);
+			 				  groupTimeBoundaryL = noteStartTime_s.toFixed(2);
+			 			      } else {
+			 				  noteInfoText = noteInfoText + "\u00A0\u00A0" + note_s.toFixed(1) + '(' + noteStr_s + ')';
+			 				  freqInfoText = freqInfoText + "\u00A0\u00A0" + freq_s.toFixed(1);
+			 				  if (n == numPairNotes - 1) {
+			 				      groupTimeBoundaryR = (Number(noteStartTime_s.toFixed(2)) + Number(noteDurationTime_s.toFixed(2))).toFixed(2);
+			 				      groupTimeDuration = (groupTimeBoundaryR - groupTimeBoundaryL).toFixed(2);
+			 				  }
+			 			      }
+			 			  }
+
+
+			 			  svg2.select("#info_note")
+			 			      .attr("fill", "grey")
+			 			      .text("Note: " + noteInfoText);
+			 			  svg2.select("#info_freq")
+			 			      .attr("fill", "grey")
+			 			      .text("Freq (Hz): " + freqInfoText);
+			 			  svg2.select("#info_time")
+			 			      .attr("fill", "grey")
+			 			      .text("Time (s): " + groupTimeBoundaryL + ' - ' + groupTimeBoundaryR + ' (' + groupTimeDuration + ')');
+			 		      }
+			                  })
+		         .on("mouseout", function(d, i) {
+			                     // Show focus line
+			                     svg1.select("#focus").style("display", null);
+			                     // d3.select("#t"+i).attr("fill", "DarkCyan");
+			                     // d3.selectAll("rect").attr("fill", "DarkCyan");
+			                     d3.select(this).attr("fill", "DarkCyan");
+			                     // svg1.selectAll('line').remove();
+			                     svg1.select('#noteBoundaryL').remove();
+			                     svg1.select('#noteBoundaryR').remove();
+			                     // svg1.select("#info_note").remove();
+			                     // svg1.select("#info_freq").remove();
+			                     // svg1.select("#info_time").remove();
+			                     svg1.select("#info_note").attr("fill", "transparent");
+			                     svg1.select("#info_freq").attr("fill", "transparent");
+			                     svg1.select("#info_time").attr("fill", "transparent");
+
+			                     // Act on the aligned note from student
+                                             var pair_s = dictT2S_note[i].student.split(" ");
+			                     numPairNotes = pair_s.length;
+
+                                             for (n = 0; n < numPairNotes; n++) {
+                                                 if (isNaN(pair_s[n])) {continue;}
+
+			 			 // d3.select("#s"+i).attr("fill", "DarkCyan");
+			 			 svg2.select("#s"+pair_s[n]).attr("fill", "DarkCyan");
+			 			 svg2.select('#noteBoundaryL' + n).remove();
+			 			 svg2.select('#noteBoundaryR' + n).remove();
+			 			 // svg2.select("#info_note").remove();
+			 			 // svg2.select("#info_freq").remove();
+			 			 // svg2.select("#info_time").remove();
+			 			 svg2.select("#info_note").attr("fill", "transparent");
+			 			 svg2.select("#info_freq").attr("fill", "transparent");
+			 			 svg2.select("#info_time").attr("fill", "transparent");
+			 		     }
+			                 })
+		         // Play note on click
+                         .on("click", function (d, i) {
+                                          // Shift and click to play aligned note(s)
+                                          if (d3.event.shiftKey) {
+                                              var pair_s = dictT2S_note[i].student.split(" ");
+
+					      if (!isNaN(pair_s[0])) {
+						  var noteStartTime = MIDInote_s[pair_s[0]].startTime;
+						  var noteEndTime = Number(MIDInote_s[pair_s[pair_s.length-1]].startTime) + Number(MIDInote_s[pair_s[pair_s.length-1]].duration);
+						  wavesurfer_s.play(noteStartTime, noteEndTime);
+					      }
+                                          } else {
+			                      var noteStartTime = d.startTime;
+			                      var noteDurationTime = d.duration;
+			                      var noteEndTime = noteStartTime + noteDurationTime;
+			                      wavesurfer_t.play(noteStartTime, noteEndTime);
+					  }
+			 });
+
+                }, 100);    // Delay
+            });
+
+
+            // Add audio player
+            wave1.style.width = width + "px";
+            wave1.style.left = margin.left + "px";
+            playButton_t.style.width = "45px";
+            // play_t.style.float = "left";
+            // play_t.style.margin-left = "5px";
+
+            var wavesurfer_t = WaveSurfer.create({
+                container: '#wave1',
+                waveColor: 'grey',
+                progressColor: 'SteelBlue',
+		fillParent: true,
+		height: 30
+		// minPxPerSec: 10
+            });
+
+            // wavesurfer_t.load('data/weiguojia_section_pro.wav');
+            wavesurfer_t.load(audio_t_default);
+
+            // Plot moving playback cursor on pitchtrack
+            svg1.append("line")
+		.attr("id", "playbackPointer_t")
+                .attr("x1", x_t(0))
+                .attr("y1", height)
+		.attr("x2", x_t(0))
+		.attr("y2", 0)
+		.style("stroke", "black");
+
+            wavesurfer_t.on('audioprocess', function () {
+                currentTime = wavesurfer_t.getCurrentTime();
+		d3.select("#playbackPointer_t")
+		    .attr("x1", x_t(currentTime))
+		    .attr("y1", height)
+		    .attr("x2", x_t(currentTime))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+            });
+
+            wavesurfer_t.on('finish', function () {
+		d3.select("#playbackPointer_t")
+		    .attr("x1", x_t(0))
+		    .attr("y1", height)
+		    .attr("x2", x_t(0))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+
+		document.getElementById("playButton_t").innerHTML = "Play";
+            });
+
+            wavesurfer_t.on('seek', function () {
+                currentTime = wavesurfer_t.getCurrentTime();
+		d3.select("#playbackPointer_t")
+		    .attr("x1", x_t(currentTime))
+		    .attr("y1", height)
+		    .attr("x2", x_t(currentTime))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+            });
+
+            function playButton_t_onclick () {
+		wavesurfer_t.playPause();
+		if (wavesurfer_t.isPlaying()) {
+		    document.getElementById("playButton_t").innerHTML = "Pause";
+		} else {
+		    document.getElementById("playButton_t").innerHTML = "Play";
+		}
+	    }
+
+
+        // Student plot
+            
+            // Adds the svg canvas
+            var svg2 = d3.select("#area2")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform", 
+                          "translate(" + margin.left + "," + margin.top + ")");
+
+            // Plot X axis label
+            svg2.append("text")
+               .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+               .style("text-anchor", "middle")
+               .text("Time");
+
+            // Plot Y axis label
+            svg2.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x",0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Pitch (MIDI)");
+
+            // Plot title
+            svg2.append("text")
+               .attr("transform", "translate(" + (width / 2) + " ," + (0 - 10) + ")")
+               .style("text-anchor", "middle")
+               .style("font-size","20px")
+               .style("font-weight","bold")
+               .text("Student");
+
+            // Define the line
+            var pitchtrack2 = d3.svg.line()
+                // .defined(function(d) { return !isNaN(d.pitch); })    // Don't plot silence (pitch value set to NaN)
+                .defined(function(d) { return d.pitch>0 ? true:false; })    // Don't plot silence (negative pitch)
+                .x(function(d) { return x_s(d.time); })
+                .y(function(d) { return y_s(d.pitch); });
+
+
+
+            // Plot pitch track
+            // d3.csv("data/student_regression_pitchtrack.csv", function(error, data) {
+            d3.csv(pitchtrack_s_default, function(error, data) {
+
+                data.forEach(function(d) {
+                    d.time = +d.time;
+                    d.pitch = +d.pitch;
+                    d.freq = +d.freq;
+                    d.noteStr = d.noteStr;
+                });
+
+		pitchtrackData_s = data;
+            
+                // Scale the range of the data
+                x_s.domain([0, d3.max(data, function(d) { return d.time; })]);
+		y_s.domain([d3.min(data, function(d) { if (d.pitch>0) {return d.pitch;}}), 2 + d3.max(data, function(d) { return d.pitch; })]);
+
+                // Add the pitchtrack path.
+                svg2.append("path")
+		    .attr("id", "path_s")
+                    .attr("class", "line")
+                    .attr("d", pitchtrack2(data))
+                    .attr("stroke", "PaleVioletRed")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none")
+		    .style("pointer-events", "none");    // Prevent mouseover failing on overlapping part
+            
+                // Add the X Axis
+                svg2.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis_s);
+            
+                // Add the Y Axis
+                svg2.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis_s);
+
+		// Create focus line
+		svg2.append("line")
+		    .attr("id", "focus")
+                    .attr("x1", x_s(0))
+                    .attr("y1", height)
+		    .attr("x2", x_s(0))
+		    .attr("y2", 0)
+                    // .attr("fill", "transparent")
+		    .style("stroke", "black")
+		    .style("stroke-dasharray", "1")
+		    .style("display", "none");
+
+		// Create focus point
+		svg2.append("circle")
+		    .attr("id", "focusPoint")
+                    .attr("cx", x_t(0))
+                    .attr("cy", y_t(0))
+                    .attr("r", 3)
+		    .attr("fill", "DarkSlateGray")
+		    .style("display", "none");
+
+		var bisectTime = d3.bisector(function(d) { return d.time; }).left;
+
+                // Initialize current segment flag
+                var curSeg = -1;
+
+		function mousemove() {                            
+		    var x0 = x_s.invert(d3.mouse(this)[0]),         
+		    i = bisectTime(data, x0, 1),              
+		    d0 = data[i - 1],                         
+		    d1 = data[i],                             
+		    d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+
+		    // Move focus line
+		    svg2.select("#focus")                      
+			.attr("x1", d3.mouse(this)[0])
+			.attr("y1", height)
+			.attr("x2", d3.mouse(this)[0])
+			.attr("y2", 0)
+			.attr("fill", "black");
+
+		    // Move focus point
+                    svg2.select("#focusPoint")                      
+            		.attr("cx", d3.mouse(this)[0])
+            		.attr("cy", y_s(d.pitch))
+
+		    // Show pitch information
+		    svg2.select("#info_note")
+			.attr("fill", "grey")
+			.text("Note: " + d.pitch.toFixed(1) + '(' + d.noteStr + ')');
+		    svg2.select("#info_freq")
+			.attr("fill", "grey")
+			.text("Freq (Hz): " + d.freq.toFixed(1));
+		    svg2.select("#info_time")
+			.attr("fill", "grey")
+		        .text("Time (s): " + d.time.toFixed(2));
+
+		    // Detect and plot pitch segment
+		    if (x0 >= pitchSeg_s[0].startTime && x0 <= pitchSeg_s[pitchSeg_s.length - 1].endTime) {
+			for (j = 0; j < pitchSeg_s.length; j++) {
+			    if (x0 >= pitchSeg_s[j].startTime && x0 <= pitchSeg_s[j].endTime) {
+                                if (j != curSeg) {
+				    // If seg changes, remove precious one and plot a new one
+				    svg2.select("#currentSeg").remove();
+				    svg1.select("#currentSeg").remove();
+				    curSeg = j;
+
+				    var currentSeg_s = svg2.append("path")
+				    // svg2.append("path")
+					.attr("id", "currentSeg")
+					.attr("d", pitchtrack2(data.filter(function(d) {
+					    return d.time >= pitchSeg_s[j].startTime && d.time <= pitchSeg_s[j].endTime;
+					})))
+					.attr("stroke", "Cyan")
+					.attr("stroke-width", 2)
+					.attr("fill", "none");
+
+				    svg2.select("#focusPoint").moveToFront();
+
+				    // Plot aligned segment
+				    var pairSeg_t = pitchSegAlign_S2T[j].teacher.split(" ");
+
+				    if (isNaN(pairSeg_t[0])) {break;}
+
+                                    var pairSeg_t_startTime = pitchSeg_t[pairSeg_t[0]].startTime,
+                                        pairSeg_t_endTime = pitchSeg_t[pairSeg_t[pairSeg_t.length-1]].endTime;
+
+				    var idxL = bisectTime(pitchtrackData_t, pairSeg_t_startTime, 1),
+				        idxR = bisectTime(pitchtrackData_t, pairSeg_t_endTime, 1);
+
+				    var currentSeg_t = svg1.append("path")
+					.attr("id", "currentSeg")
+					.attr("d", pitchtrack1(pitchtrackData_t.slice(idxL, idxR)))
+					.attr("stroke", "Cyan")
+					.attr("stroke-width", 2)
+					.attr("fill", "none");
+
+				    // Show focus point on top
+				    svg1.select("#focusPoint").moveToFront();
+				}
+
+                                break;
+			    }
+			}
+		    }
+
+		}
+
+		// Navigate audio
+		function mouseclick() {                            
+		    var x0 = x_s.invert(d3.mouse(this)[0]);
+		    // var x0 = x_s.invert(d3.mouse(svg2.select("#focusArea").node())[0]);
+		    i = bisectTime(data, x0, 1),              
+		    d0 = data[i - 1],                         
+		    d1 = data[i],                             
+		    d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+
+		    var progress = d.time / x_s.domain()[1];
+
+		    wavesurfer_s.seekTo(progress);
+		}
+
+		// Focus detection area
+		svg2.append("rect")
+		    .attr("id", "focusArea")
+		    .attr("class", "overlay")
+		    .attr("width", width)
+		    .attr("height", height)
+		    .attr("fill", "transparent")
+		    .on("mouseover", function() {
+                                         svg2.select("#focus").style("display", null);
+                                         svg2.select("#focusPoint").style("display", null);
+                                     })
+		    .on("mouseout", function() {
+			                svg2.select("#focus").style("display", "none");
+                                        svg2.select("#focusPoint").style("display", "none");
+			                svg2.select("#info_note").attr("fill", "transparent");
+			                svg2.select("#info_freq").attr("fill", "transparent");
+			                svg2.select("#info_time").attr("fill", "transparent");
+                                        svg2.select("#currentSeg").remove();
+                                        svg1.select("#currentSeg").remove();
+                                        curSeg = -1;
+		                    })
+		    .on("mousemove", mousemove)
+		    .on("click", mouseclick);
+            });
+
+            // Plot MIDI notes
+
+            svg2.append("text")
+                .attr("id", "info_note")
+                .attr("transform", "translate(" + width + " ," + 10 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+            svg2.append("text")
+                .attr("id", "info_freq")
+                .attr("transform", "translate(" + width + " ," + 25 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+            svg2.append("text")
+                .attr("id", "info_time")
+                .attr("transform", "translate(" + width + " ," + 40 + ")")
+                .attr("fill", "transparent")
+                .style("text-anchor", "end")
+
+            var MIDInote_s;
+
+            d3.csv(noteSeg_s_default, function(error, data) {
+
+                data.forEach(function(d) {
+                    d.startTime = +d.startTime;
+                    d.pitch = +d.pitch;
+	    	    d.duration = +d.duration;
+	    	    d.freq = +d.freq;
+	    	    d.noteStr = d.noteStr;
+                });
+
+		MIDInote_s = data;
+
+		// Sometimes plot doesn't show. Delay seems to be a workaround.
+		setTimeout(function() {
+
+	    	var MIDInotes = svg2.selectAll("rect.note")
+                                   .data(data)
+                                   .enter()
+                                   .append("rect")
+                                   .attr("class", "note");
+
+		var MIDInoteOffset = 4;    // The vertical center of the note rect is aligned to the pitch
+
+	    	MIDInotes.attr("x", function(d) {return x_s(d.startTime);})
+	    	         .attr("y", function(d) {return y_s(d.pitch) - MIDInoteOffset;})
+    	                 .attr("width", function(d) {return x_s(d.duration);})
+   	                 .attr("height", 8)
+        	         .attr("fill", "DarkCyan")
+		         .attr("opacity", 0.7)
+		         .attr("id", function(d, i){var noteid = 's'+i; return noteid; })    // Note ID for alignment visualization
+		         .on("mouseover", function(d, i) {
+			                      // Hide focus line
+			                      svg1.select("#focus").style("display", "none");
+			                      // Highlight current note
+			                      d3.select(this).attr("fill", "Purple");
+			                      // Draw note boundary
+			                      var note_s = d.pitch
+			                      var freq_s = d.freq
+			                      var noteStr_s = d.noteStr
+			                      var noteStart_s = Number(d3.select(this).attr("x"));
+			                      var noteStartTime_s = MIDInote_s[i].startTime;
+			                      var noteDuration_s = Number(d3.select(this).attr("width"));
+			                      var noteDurationTime_s = MIDInote_s[i].duration;
+			 		      var noteEnd_s = noteStart_s + noteDuration_s;
+			 		      var noteEndTime_s = noteStartTime_s + noteDurationTime_s;
+
+			                      svg2.append("line")
+			 	                  // .attr("x1", x(d.startTime))
+			 	                  .attr("id", "noteBoundaryL")
+			 	                  .attr("x1", noteStart_s)
+			 	                  .attr("y1", height)
+			 	                  .attr("x2", noteStart_s)
+			 	                  .attr("y2", 0)
+			 	                  .style("stroke", "grey")
+			 	                  .style("stroke-dasharray", "3");
+			                      svg2.append("line")
+			 	                  .attr("id", "noteBoundaryR")
+			 	                  .attr("x1", noteEnd_s) 
+			 	                  .attr("y1", height)
+			 	                  .attr("x2", noteEnd_s)
+			 	                  .attr("y2", 0)
+			 	                  .style("stroke", "grey")
+			 	                  .style("stroke-dasharray", "3");
+
+			                      // Print note information
+			                      svg2.select("#info_note")
+                                                  .attr("fill", "grey")
+			 	                  .text("Note: " + note_s.toFixed(1) + '(' + noteStr_s + ')');
+			                      svg2.select("#info_freq")
+			                          .attr("fill", "grey")
+			 	                  .text("Freq (Hz): " + freq_s.toFixed(1));
+			                      svg2.select("#info_time")
+			                          .attr("fill", "grey")
+			 	                  .text("Time (s): " + noteStartTime_s.toFixed(2) + ' - ' + (Number(noteStartTime_s.toFixed(2)) + Number(noteDurationTime_s.toFixed(2))).toFixed(2) + ' (' + noteDurationTime_s.toFixed(2) + ')');
+
+
+			                      // Act on the aligned note from teacher
+                                              var pair_t = dictS2T_note[i].teacher.split(" ");
+		                                  numPairNotes = pair_t.length;
+
+                                              // In case of multiple notes, print group boundary time
+                                              var noteInfoText = "",
+			                          freqInfoText = "",
+			                          groupTimeBoundaryL,
+			                          groupTimeBoundaryR,
+			                          groupTimeDuration;
+
+                                              for (n = 0; n < numPairNotes; n++) {
+
+			 			  if (isNaN(pair_t[n])) {continue;}
+
+			 			  d3.select("#t"+pair_t[n]).attr("fill", "Purple");
+			 			  var note_t = MIDInote_t[pair_t[n]].pitch;
+			 			  var freq_t = Number(MIDInote_t[pair_t[n]].freq);
+			 			  var noteStr_t = MIDInote_t[pair_t[n]].noteStr;
+			 			  var noteStart_t = Number(d3.select("#t"+pair_t[n]).attr("x"));
+			 			  var noteStartTime_t = MIDInote_t[pair_t[n]].startTime;
+			 			  var noteDuration_t = Number(d3.select("#t"+pair_t[n]).attr("width"));
+			 			  var noteDurationTime_t = MIDInote_t[pair_t[n]].duration;
+			 			  var noteEnd_t = noteStart_t + noteDuration_t;
+			 			  var noteEndTime_t = noteStartTime_t + noteDurationTime_t;
+
+			 			  svg1.append("line")
+			 	                      .attr("id", "noteBoundaryL" + n)
+			 	                      .attr("x1", noteStart_t)
+			 	                      .attr("y1", height)
+			 	                      .attr("x2", noteStart_t)
+			 	                      .attr("y2", 0)
+			 	                      .style("stroke", "grey")
+			 	                      .style("stroke-dasharray", "3");
+			 			  svg1.append("line")
+			 	                      .attr("id", "noteBoundaryR" + n)
+			 	                      .attr("x1", noteEnd_t) 
+			 	                      .attr("y1", height)
+			 	                      .attr("x2", noteEnd_t)
+			 	                      .attr("y2", 0)
+			 	                      .style("stroke", "grey")
+			 	                      .style("stroke-dasharray", "3");
+
+			 			  // Plot note info
+			 			  if (numPairNotes == 1) {
+			 			      noteInfoText = note_t.toFixed(1) + '(' + noteStr_t + ')';
+			 			      freqInfoText = freq_t.toFixed(1);
+			 			      groupTimeBoundaryL = noteStartTime_t.toFixed(2);
+			 			      groupTimeDuration = noteDurationTime_t.toFixed(2);
+			 			      groupTimeBoundaryR = groupTimeBoundaryL + groupTimeDuration;
+			 			  } else {  // More than 1 note
+			 			      if (n == 0) {
+			 				  noteInfoText = note_t.toFixed(1) + '(' + noteStr_t + ')';
+			 				  freqInfoText = freq_t.toFixed(1);
+			 				  groupTimeBoundaryL = noteStartTime_t.toFixed(2);
+			 			      } else {
+			 				  noteInfoText = noteInfoText + "\u00A0\u00A0" + note_t.toFixed(1) + '(' + noteStr_t + ')';
+			 				  freqInfoText = freqInfoText + "\u00A0\u00A0" + freq_t.toFixed(1);
+			 				  if (n == numPairNotes - 1) {
+			 				      groupTimeBoundaryR = (Number(noteStartTime_t.toFixed(2)) + Number(noteDurationTime_t.toFixed(2))).toFixed(2);
+			 				      groupTimeDuration = (groupTimeBoundaryR - groupTimeBoundaryL).toFixed(2);
+			 				  }
+			 			      }
+			 			  }
+
+			 			  svg1.select("#info_note")
+			 			      .attr("fill", "grey")
+			 			      .text("Note: " + noteInfoText);
+			 			  svg1.select("#info_freq")
+			 			      .attr("fill", "grey")
+			 			      .text("Freq (Hz): " + freqInfoText);
+			 			  svg1.select("#info_time")
+			 			      .attr("fill", "grey")
+			 			      .text("Time (s): " + groupTimeBoundaryL + ' - ' + groupTimeBoundaryR + ' (' + groupTimeDuration + ')');
+			 		      }
+			                  })
+		         .on("mouseout", function(d, i) {
+			                     // Show focus line
+			                     svg2.select("#focus").style("display", null);
+
+			                     d3.select(this).attr("fill", "DarkCyan");
+			                     svg2.select('#noteBoundaryL').remove();
+			                     svg2.select('#noteBoundaryR').remove();
+			                     svg2.select("#info_note").attr("fill", "transparent");
+			                     svg2.select("#info_freq").attr("fill", "transparent");
+			                     svg2.select("#info_time").attr("fill", "transparent");
+
+			                     // Act on the aligned note from student
+                                             var pair_t = dictS2T_note[i].teacher.split(" ");
+		                                 numPairNotes = pair_t.length;
+
+                                             for (n = 0; n < numPairNotes; n++) {
+			 			 if (isNaN(pair_t[n])) {continue;}
+
+			 			 svg1.select("#t"+pair_t[n]).attr("fill", "DarkCyan");
+			 			 svg1.select('#noteBoundaryL' + n).remove();
+			 			 svg1.select('#noteBoundaryR' + n).remove();
+			 			 svg1.select("#info_note").attr("fill", "transparent");
+			 			 svg1.select("#info_freq").attr("fill", "transparent");
+			 			 svg1.select("#info_time").attr("fill", "transparent");					     }
+			                 })
+		         // Play note on click
+                         .on("click", function (d, i) {
+                                          // Shift and click to play aligned note(s)
+                                          if (d3.event.shiftKey) {
+                                              var pair_t = dictS2T_note[i].teacher.split(" ");
+
+					      if (!isNaN(pair_t[0])) {
+						  var noteStartTime = MIDInote_t[pair_t[0]].startTime;
+						  var noteEndTime = Number(MIDInote_t[pair_t[pair_t.length-1]].startTime) + Number(MIDInote_t[pair_t[pair_t.length-1]].duration);
+						  wavesurfer_t.play(noteStartTime, noteEndTime);
+					      }
+                                          } else {
+			                      var noteStartTime = d.startTime;
+			                      var noteDurationTime = d.duration;
+			                      var noteEndTime = noteStartTime + noteDurationTime;
+			                      wavesurfer_s.play(noteStartTime, noteEndTime);
+					  }
+			 });
+
+                }, 100);    // Time delay
+            });
+
+
+
+            // Add audio player
+            wave2.style.width = width + "px";
+            wave2.style.left = margin.left + "px";
+            playButton_s.style.width = "45px";
+
+            var wavesurfer_s = WaveSurfer.create({
+                container: '#wave2',
+                waveColor: 'grey',
+                progressColor: 'SteelBlue',
+		fillParent: true,
+		height: 30
+		// minPxPerSec: 10
+            });
+
+            // wavesurfer_s.load('data/weiguojia_section_amateur.wav');
+            wavesurfer_s.load(audio_s_default);
+
+            // Plot moving playback cursor on pitchtrack
+            svg2.append("line")
+		.attr("id", "playbackPointer_s")
+                .attr("x1", x_t(0))
+                .attr("y1", height)
+		.attr("x2", x_t(0))
+		.attr("y2", 0)
+		.style("stroke", "black");
+
+            wavesurfer_s.on('audioprocess', function () {
+                currentTime = wavesurfer_s.getCurrentTime();
+		d3.select("#playbackPointer_s")
+		    .attr("x1", x_s(currentTime))
+		    .attr("y1", height)
+		    .attr("x2", x_s(currentTime))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+            });
+
+            wavesurfer_s.on('finish', function () {
+		d3.select("#playbackPointer_s")
+		    .attr("x1", x_s(0))
+		    .attr("y1", height)
+		    .attr("x2", x_s(0))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+
+		document.getElementById("playButton_s").innerHTML = "Play";
+            });
+
+            wavesurfer_s.on('seek', function () {
+                currentTime = wavesurfer_s.getCurrentTime();
+		d3.select("#playbackPointer_s")
+		    .attr("x1", x_s(currentTime))
+		    .attr("y1", height)
+		    .attr("x2", x_s(currentTime))
+		    .attr("y2", 0)
+		    .style("stroke", "black");
+            });
+
+            function playButton_s_onclick () {
+		wavesurfer_s.playPause();
+		if (wavesurfer_s.isPlaying()) {
+		    document.getElementById("playButton_s").innerHTML = "Pause";
+		} else {
+		    document.getElementById("playButton_s").innerHTML = "Play";
+		}
+	    }
+
+///////////////////////////////////////////////////
+///// Update visualization with new data
+///////////////////////////////////////////////////
+            function updateData (pitchtrack_t_update, pitchtrack_s_update, noteSeg_t_update, noteSeg_s_update, noteAlign_T2S_update, noteAlign_S2T_update, audio_t_update, audio_s_update, pitchSeg_t_update, pitchSeg_s_update, pitchSegAlign_T2S_update, pitchSegAlign_S2T_update) {
+		// Update alignment dict
+		var dictS2T_note;
+		// d3.tsv("data/amateur2pro.txt", function(error, data) {
+		d3.csv(noteAlign_S2T_update, function(error, data) {
+                    data.forEach(function(d) {
+			d.student = d.student;
+			d.teacher = d.teacher;
+                    });
+
+		    dictS2T_note = data;
+		});
+
+		var dictT2S_note;
+		// d3.tsv("data/pro2amateur.txt", function(error, data) {
+		d3.csv(noteAlign_T2S_update, function(error, data) {
+                    data.forEach(function(d) {
+			// d.student = +d.student;
+			// d.teacher = +d.teacher;
+			d.student = d.student;    // Import as string
+			d.teacher = d.teacher;
+                    });
+
+		    dictT2S_note = data;
+		});
+
+                // Read pitch segmentation info
+                d3.csv(pitchSeg_t_update, function(error, data) {
+                    data.forEach(function(d) {
+                	    d.startTime = +d.startTime;
+                	    d.endTime = +d.endTime;
+                    });
+            
+                    setTimeout(function() {pitchSeg_t = data;}, 50);
+                });
+            
+                d3.csv(pitchSeg_s_update, function(error, data) {
+                    data.forEach(function(d) {
+                	    d.startTime = +d.startTime;
+                	    d.endTime = +d.endTime;
+                    });
+            
+                    setTimeout(function() {pitchSeg_s = data;}, 50);
+                });
+            
+                d3.csv(pitchSegAlign_T2S_update, function(error, data) {
+                    data.forEach(function(d) {
+                	    d.startTime = +d.startTime;
+                	    d.endTime = +d.endTime;
+                    });
+            
+                    setTimeout(function() {pitchSegAlign_T2S = data;}, 50);
+                });
+            
+                d3.csv(pitchSegAlign_S2T_update, function(error, data) {
+                    data.forEach(function(d) {
+                	    d.startTime = +d.startTime;
+                	    d.endTime = +d.endTime;
+                    });
+            
+                    setTimeout(function() {pitchSegAlign_S2T = data;}, 50);
+                });
+
+                // Update teacher pitch track
+                d3.csv(pitchtrack_t_update, function(error, data) {
+                    data.forEach(function(d) {
+                        d.time = +d.time;
+                        d.pitch = +d.pitch;
+                        d.freq = +d.freq;
+                        d.noteStr = d.noteStr;
+                    });
+
+		    pitchtrackData_t = data;
+                    
+                    // Rescale the range of the data
+                    x_t.domain([0, d3.max(data, function(d) { return d.time; })]);
+                    y_t.domain([d3.min(data, function(d) { if (d.pitch>0) {return d.pitch;}}), 2 + d3.max(data, function(d) { return d.pitch; })]);
+
+                    // Update X Axis
+                    svg1.select(".x.axis")
+			.call(xAxis_t);
+		    
+                    // Update Y Axis
+                    svg1.select(".y.axis")
+			.call(yAxis_t);
+
+		    // Update pitch
+		    svg1.select("#path_t").attr("d", pitchtrack1(data));
+
+            	    // Functions for mouse events
+            	    var bisectTime = d3.bisector(function(d) { return d.time; }).left;
+		    
+            	    // Initialize current segment flag
+            	    var curSeg = -1;
+		    
+            	    function mousemove() {                            
+                        var x0 = x_t.invert(d3.mouse(this)[0]),
+                        i = bisectTime(data, x0, 1),             
+                        d0 = data[i - 1],              
+                        d1 = data[i],                         
+                        d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+                	
+            		// Move focus line
+                        svg1.select("#focus")                      
+                            .attr("x1", d3.mouse(this)[0])
+                            .attr("y1", height)
+                            .attr("x2", d3.mouse(this)[0])
+                            .attr("y2", 0)
+                            .attr("fill", "black");
+			
+            		// Move focus point
+                        svg1.select("#focusPoint")                      
+                            .attr("cx", d3.mouse(this)[0])
+                            .attr("cy", y_t(d.pitch))
+            		
+                        // Show pitch information
+                        svg1.select("#info_note")
+                            .attr("fill", "grey")
+                            .text("Note: " + d.pitch.toFixed(1) + '(' + d.noteStr + ')');
+                        svg1.select("#info_freq")
+                            .attr("fill", "grey")
+                            .text("Freq (Hz): " + d.freq.toFixed(1));
+                        svg1.select("#info_time")
+                            .attr("fill", "grey")
+                            .text("Time (s): " + d.time.toFixed(2));
+			
+            		// Detect and plot pitch segment
+            		if (x0 >= pitchSeg_t[0].startTime && x0 <= pitchSeg_t[pitchSeg_t.length - 1].endTime) {
+            		    for (j = 0; j < pitchSeg_t.length; j++) {
+            			if (x0 >= pitchSeg_t[j].startTime && x0 <= pitchSeg_t[j].endTime) {
+                                    if (j != curSeg) {
+            				// If seg changes, remove precious one and plot a new one
+            				svg1.select("#currentSeg").remove();
+					svg2.select("#currentSeg").remove();
+            				curSeg = j;
+					
+            				var currentSeg_t = svg1.append("path")
+            				// svg1.append("path")
+            				    .attr("id", "currentSeg")
+            				    .attr("d", pitchtrack1(data.filter(function(d) {
+            					return d.time >= pitchSeg_t[j].startTime && d.time <= pitchSeg_t[j].endTime;
+            				    })))
+            				    .attr("stroke", "Cyan")
+            				    .attr("stroke-width", 2)
+            				    .attr("fill", "none");
+
+					svg1.select("#focusPoint").moveToFront();
+
+					// Plot aligned segment
+					var pairSeg_s = pitchSegAlign_T2S[j].student.split(" ");
+
+					if (isNaN(pairSeg_s[0])) {break;}
+
+                                        var pairSeg_s_startTime = pitchSeg_s[pairSeg_s[0]].startTime,
+                                            pairSeg_s_endTime = pitchSeg_s[pairSeg_s[pairSeg_s.length-1]].endTime;
+
+					var idxL = bisectTime(pitchtrackData_s, pairSeg_s_startTime, 1),
+				        idxR = bisectTime(pitchtrackData_s, pairSeg_s_endTime, 1);
+
+					var currentSeg_s = svg2.append("path")
+					    .attr("id", "currentSeg")
+					    .attr("d", pitchtrack2(pitchtrackData_s.slice(idxL, idxR)))
+					    .attr("stroke", "Cyan")
+					    .attr("stroke-width", 2)
+					    .attr("fill", "none");
+
+					// Show focus point on top
+					svg2.select("#focusPoint").moveToFront();
+            			    }
+				    
+                                    break;
+            			}
+            		    }
+            		}
+			
+            	    }
+            	
+            	    // Update mousemove and mouseout function
+            	    svg1.select("#focusArea")
+            		.on("mouseout", function() {
+            		    svg1.select("#focus").style("display", "none");
+                            svg1.select("#focusPoint").style("display", "none");
+            		    svg1.select("#info_note").attr("fill", "transparent");
+            		    svg1.select("#info_freq").attr("fill", "transparent");
+            		    svg1.select("#info_time").attr("fill", "transparent");
+            		    svg1.select("#currentSeg").remove();
+            		    svg2.select("#currentSeg").remove();
+                            curSeg = -1;
+            		})
+            		.on("mousemove", mousemove);
+                });
+
+
+		// Update student pitch track
+		d3.csv(pitchtrack_s_update, function(error, data) {
+                    data.forEach(function(d) {
+			d.time = +d.time;
+			d.pitch = +d.pitch;
+			d.freq = +d.freq;
+			d.noteStr = d.noteStr;
+                    });
+
+		    pitchtrackData_s = data;
+		    
+                    // Scale the range of the data
+                    x_s.domain([0, d3.max(data, function(d) { return d.time; })]);
+		    y_s.domain([d3.min(data, function(d) { if (d.pitch>0) {return d.pitch;}}), 2 + d3.max(data, function(d) { return d.pitch; })]);
+
+                    // Update X Axis
+                    svg2.select(".x.axis")
+			.call(xAxis_s);
+		    
+                    // Update Y Axis
+                    svg2.select(".y.axis")
+			.call(yAxis_s);
+
+		    // Update pitch
+		    svg2.select("#path_s").attr("d", pitchtrack2(data));
+
+		    var bisectTime = d3.bisector(function(d) { return d.time; }).left;
+
+            	    // Initialize current segment flag
+            	    var curSeg = -1;
+
+		    function mousemove() {                            
+			var x0 = x_s.invert(d3.mouse(svg2.select("#focusArea").node())[0]),         
+			i = bisectTime(data, x0, 1),              
+			d0 = data[i - 1],                         
+			d1 = data[i],                             
+			d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+
+			// Move focus line
+			svg2.select("#focus")                      
+			    .attr("x1", d3.mouse(svg2.select("#focusArea").node())[0])
+			    .attr("y1", height)
+			    .attr("x2", d3.mouse(svg2.select("#focusArea").node())[0])
+			    .attr("y2", 0)
+			    .attr("fill", "black");
+
+			// Move focus point
+			svg2.select("#focusPoint")                      
+            		    .attr("cx", d3.mouse(svg2.select("#focusArea").node())[0])
+            		    .attr("cy", y_s(d.pitch))
+
+			// Show pitch information
+			svg2.select("#info_note")
+			    .attr("fill", "grey")
+			    .text("Note: " + d.pitch.toFixed(1) + '(' + d.noteStr + ')');
+			svg2.select("#info_freq")
+			    .attr("fill", "grey")
+			    .text("Freq (Hz): " + d.freq.toFixed(1));
+			svg2.select("#info_time")
+			    .attr("fill", "grey")
+		            .text("Time (s): " + d.time.toFixed(2));
+
+			// Detect and plot pitch segment
+			if (x0 >= pitchSeg_s[0].startTime && x0 <= pitchSeg_s[pitchSeg_s.length - 1].endTime) {
+			    for (j = 0; j < pitchSeg_s.length; j++) {
+				if (x0 >= pitchSeg_s[j].startTime && x0 <= pitchSeg_s[j].endTime) {
+                                    if (j != curSeg) {
+					// If seg changes, remove precious one and plot a new one
+					svg2.select("#currentSeg").remove();
+					svg1.select("#currentSeg").remove();
+					curSeg = j;
+
+					var currentSeg_t = svg2.append("path")
+					// svg2.append("path")
+					    .attr("id", "currentSeg")
+					    .attr("d", pitchtrack2(data.filter(function(d) {
+						return d.time >= pitchSeg_s[j].startTime && d.time <= pitchSeg_s[j].endTime;
+					    })))
+					    .attr("stroke", "Cyan")
+					    .attr("stroke-width", 2)
+					    .attr("fill", "none");
+
+					svg2.select("#focusPoint").moveToFront();
+
+					// Plot aligned segment
+					var pairSeg_t = pitchSegAlign_S2T[j].teacher.split(" ");
+
+					if (isNaN(pairSeg_t[0])) {break;}
+
+					var pairSeg_t_startTime = pitchSeg_t[pairSeg_t[0]].startTime,
+                                        pairSeg_t_endTime = pitchSeg_t[pairSeg_t[pairSeg_t.length-1]].endTime;
+
+					var idxL = bisectTime(pitchtrackData_t, pairSeg_t_startTime, 1),
+				        idxR = bisectTime(pitchtrackData_t, pairSeg_t_endTime, 1);
+
+					var currentSeg_t = svg1.append("path")
+					    .attr("id", "currentSeg")
+					    .attr("d", pitchtrack1(pitchtrackData_t.slice(idxL, idxR)))
+					    .attr("stroke", "Cyan")
+					    .attr("stroke-width", 2)
+					    .attr("fill", "none");
+
+					// Show focus point on top
+					svg1.select("#focusPoint").moveToFront();
+				    }
+
+                                    break;
+				}
+			    }
+			}
+
+		    }
+
+		    // Navigate audio
+		    function mouseclick() {                            
+			var x0 = x_s.invert(d3.mouse(svg2.select("#focusArea").node())[0]);
+			// var x0 = x_s.invert(d3.mouse(svg2.select("#focusArea").node())[0]);
+			i = bisectTime(data, x0, 1),              
+			d0 = data[i - 1],                         
+			d1 = data[i],                             
+			d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+
+			var progress = d.time / x_s.domain()[1];
+
+			wavesurfer_s.seekTo(progress);
+		    }
+
+		    svg2.select("#focusArea")
+			.on("mousemove", mousemove)
+                        .on("click", mouseclick);
+
+		});
+
+		// Update audio
+		wavesurfer_t.load(audio_t_update);
+
+		wavesurfer_t.unAll();
+
+		wavesurfer_t.on('audioprocess', function () {
+		    currentTime = wavesurfer_t.getCurrentTime();
+		    d3.select("#playbackPointer_t")
+			.attr("x1", x_t(currentTime))
+			.attr("y1", height)
+			.attr("x2", x_t(currentTime))
+			.attr("y2", 0)
+			.style("stroke", "black");
+		});
+
+		wavesurfer_t.on('finish', function () {
+		    d3.select("#playbackPointer_t")
+			.attr("x1", x_t(0))
+			.attr("y1", height)
+			.attr("x2", x_t(0))
+			.attr("y2", 0)
+			.style("stroke", "black");
+
+		    document.getElementById("playButton_t").innerHTML = "Play";
+		});
+
+		wavesurfer_t.on('seek', function () {
+		    currentTime = wavesurfer_t.getCurrentTime();
+		    d3.select("#playbackPointer_t")
+			.attr("x1", x_t(currentTime))
+			.attr("y1", height)
+			.attr("x2", x_t(currentTime))
+			.attr("y2", 0)
+			.style("stroke", "black");
+		});
+
+		wavesurfer_s.load(audio_s_update);
+
+		wavesurfer_s.unAll();
+
+		wavesurfer_s.on('audioprocess', function () {
+		    currentTime = wavesurfer_s.getCurrentTime();
+		    d3.select("#playbackPointer_s")
+			.attr("x1", x_s(currentTime))
+			.attr("y1", height)
+			.attr("x2", x_s(currentTime))
+			.attr("y2", 0)
+			.style("stroke", "black");
+		});
+
+		wavesurfer_s.on('finish', function () {
+		    d3.select("#playbackPointer_s")
+			.attr("x1", x_s(0))
+			.attr("y1", height)
+			.attr("x2", x_s(0))
+			.attr("y2", 0)
+			.style("stroke", "black");
+
+		    document.getElementById("playButton_s").innerHTML = "Play";
+		});
+
+		wavesurfer_s.on('seek', function () {
+		    currentTime = wavesurfer_s.getCurrentTime();
+		    d3.select("#playbackPointer_s")
+			.attr("x1", x_s(currentTime))
+			.attr("y1", height)
+			.attr("x2", x_s(currentTime))
+			.attr("y2", 0)
+			.style("stroke", "black");
+		});
+
+		// Update teacher MIDI note plot
+		d3.csv(noteSeg_t_update, function(error, data) {
+                    data.forEach(function(d) {
+			d.startTime = +d.startTime;
+			d.pitch = +d.pitch;
+			d.duration = +d.duration;
+			d.freq = +d.freq;
+			d.noteStr = d.noteStr;
+                    });
+		    
+		    // Remove previous notes
+		    for (i = 0; i < MIDInote_t.length; ++i) {
+			svg1.select("#t"+i).remove();
+		    }
+
+		    // Update with new data
+		    MIDInote_t = data;
+
+		    // Sometimes plot doesn't show. Delay seems to be a workaround.
+		    setTimeout(function() {
+		    
+		    // Plot new notes
+	    	    var MIDInotes = svg1.selectAll("rect.note")    // Have to specify a class to exclude focus area
+                        .data(data)
+                        .enter()
+                        .append("rect")
+                        .attr("class", "note");
+
+		    var MIDInoteOffset = 4;    // The vertical center of the note rect is aligned to the pitch
+	    	    MIDInotes.attr("x", function(d) {return x_t(d.startTime);})
+	    	        .attr("y", function(d) {return y_t(d.pitch) - MIDInoteOffset;})
+	    	        .attr("width", function(d) {return x_t(d.duration);})
+	    	        .attr("height", 8)
+		        .attr("fill", "DarkCyan")
+		        .attr("opacity", 0.7)
+		        .attr("id", function(d, i){var noteid = 't'+i; return noteid; })    // Note ID for alignment visualization
+		        .on("mouseover", function(d, i) {
+			    // Hide focus line
+			    svg1.select("#focus").style("display", "none");
+			    // Highlight current note
+			    d3.select(this).attr("fill", "Purple");
+			    // Draw note boundary
+			    var note_t = d.pitch;
+			    var freq_t = d.freq;
+			    var noteStr_t = d.noteStr;
+			    var noteStart_t = Number(d3.select(this).attr("x"));
+			    var noteStartTime_t = MIDInote_t[i].startTime;
+			    var noteDuration_t = Number(d3.select(this).attr("width"));
+			    var noteDurationTime_t = MIDInote_t[i].duration;
+			    var noteEnd_t = noteStart_t + noteDuration_t;
+			    var noteEndTime_t = noteStartTime_t + noteDurationTime_t;
+
+			    svg1.append("line")
+				.attr("id", "noteBoundaryL")
+				.attr("x1", noteStart_t)
+				.attr("y1", height)
+				.attr("x2", noteStart_t)
+				.attr("y2", 0)
+				.style("stroke", "grey")
+				.style("stroke-dasharray", "3");
+			    svg1.append("line")
+				.attr("id", "noteBoundaryR")
+				.attr("x1", noteEnd_t) 
+				.attr("y1", height)
+				.attr("x2", noteEnd_t)
+				.attr("y2", 0)
+				.style("stroke", "grey")
+				.style("stroke-dasharray", "3");
+
+			    // Print note information
+			    svg1.select("#info_note")
+                                .attr("fill", "grey")
+				.text("Note: " + note_t.toFixed(1) + '(' + noteStr_t + ')');
+			    svg1.select("#info_freq")
+			        .attr("fill", "grey")
+				.text("Freq (Hz): " + freq_t.toFixed(1));
+			    svg1.select("#info_time")
+			        .attr("fill", "grey")
+				.text("Time (s): " + noteStartTime_t.toFixed(2) + ' - ' + (Number(noteStartTime_t.toFixed(2)) + Number(noteDurationTime_t.toFixed(2))).toFixed(2) + ' (' + noteDurationTime_t.toFixed(2) + ')');
+
+			    // Act on the aligned note from student
+                            var pair_s = dictT2S_note[i].student.split(" ");
+                                numPairNotes = pair_s.length;
+
+			    // In case of multiple notes, print group boundary time
+			    var noteInfoText = "",
+			        freqInfoText = "",
+			        groupTimeBoundaryL,
+			        groupTimeBoundaryR,
+			        groupTimeDuration;
+
+                            for (n = 0; n < numPairNotes; n++) {
+
+                            if (isNaN(pair_s[n])) {continue;}
+
+                            d3.select("#s"+pair_s[n]).attr("fill", "Purple");
+                            var note_s = MIDInote_s[pair_s[n]].pitch;
+                            var freq_s = Number(MIDInote_s[pair_s[n]].freq);
+                            var noteStr_s = MIDInote_s[pair_s[n]].noteStr;
+                            var noteStart_s = Number(d3.select("#s"+pair_s[n]).attr("x"));
+                            var noteStartTime_s = MIDInote_s[pair_s[n]].startTime;
+                            var noteDuration_s = Number(d3.select("#s"+pair_s[n]).attr("width"));
+                            var noteDurationTime_s = MIDInote_s[pair_s[n]].duration;
+                            var noteEnd_s = noteStart_s + noteDuration_s;
+                            var noteEndTime_s = noteStartTime_s + noteDurationTime_s;
+
+                            svg2.append("line")
+                                .attr("id", "noteBoundaryL" + n)
+                                .attr("x1", noteStart_s)
+                                .attr("y1", height)
+                                .attr("x2", noteStart_s)
+                                .attr("y2", 0)
+                                .style("stroke", "grey")
+                                .style("stroke-dasharray", "3");
+                            svg2.append("line")
+                                .attr("id", "noteBoundaryR" + n)
+                                .attr("x1", noteEnd_s) 
+                                .attr("y1", height)
+                                .attr("x2", noteEnd_s)
+                                .attr("y2", 0)
+                                .style("stroke", "grey")
+                                .style("stroke-dasharray", "3");
+
+                            // Plot note info
+                            if (numPairNotes == 1) {
+				noteInfoText = note_s.toFixed(1) + '(' + noteStr_s + ')';
+				freqInfoText = freq_s.toFixed(1);
+				groupTimeBoundaryL = noteStartTime_s.toFixed(2);
+				groupTimeDuration = noteDurationTime_s.toFixed(2);
+				groupTimeBoundaryR = Number(groupTimeBoundaryL) + Number(groupTimeDuration);
+			    } else {  // More than 1 note
+				if (n == 0) {
+				    noteInfoText = note_s.toFixed(1) + '(' + noteStr_s + ')';
+				    freqInfoText = freq_s.toFixed(1);
+				    groupTimeBoundaryL = noteStartTime_s.toFixed(2);
+				} else {
+				    noteInfoText = noteInfoText + "\u00A0\u00A0" + note_s.toFixed(1) + '(' + noteStr_s + ')';
+				    freqInfoText = freqInfoText + "\u00A0\u00A0" + freq_s.toFixed(1);
+				    if (n == numPairNotes - 1) {
+					groupTimeBoundaryR = (Number(noteStartTime_s.toFixed(2)) + Number(noteDurationTime_s.toFixed(2))).toFixed(2);
+					groupTimeDuration = (groupTimeBoundaryR - groupTimeBoundaryL).toFixed(2);
+				    }
+				}
+			    }
+
+                            svg2.select("#info_note")
+                                .attr("fill", "grey")
+                                .text("Note: " + noteInfoText);
+                            svg2.select("#info_freq")
+                                .attr("fill", "grey")
+                                .text("Freq (Hz): " + freqInfoText);
+                            svg2.select("#info_time")
+                                .attr("fill", "grey")
+                                .text("Time (s): " + groupTimeBoundaryL + ' - ' + groupTimeBoundaryR + ' (' + groupTimeDuration + ')');
+                            }
+			})
+		        .on("mouseout", function(d, i) {
+			    // Show focus line
+			    svg1.select("#focus").style("display", null);
+			    // d3.select("#t"+i).attr("fill", "DarkCyan");
+			    // d3.selectAll("rect").attr("fill", "DarkCyan");
+			    d3.select(this).attr("fill", "DarkCyan");
+			    // svg1.selectAll('line').remove();
+			    svg1.select('#noteBoundaryL').remove();
+			    svg1.select('#noteBoundaryR').remove();
+			    // svg1.select("#info_note").remove();
+			    // svg1.select("#info_freq").remove();
+			    // svg1.select("#info_time").remove();
+			    svg1.select("#info_note").attr("fill", "transparent");
+			    svg1.select("#info_freq").attr("fill", "transparent");
+			    svg1.select("#info_time").attr("fill", "transparent");
+
+			    // Act on the aligned note from student
+                            var pair_s = dictT2S_note[i].student.split(" ");
+			    numPairNotes = pair_s.length;
+
+                            for (n = 0; n < numPairNotes; n++) {
+                                if (isNaN(pair_s[n])) {continue;}
+			        
+                                // d3.select("#s"+i).attr("fill", "DarkCyan");
+                                svg2.select("#s"+pair_s[n]).attr("fill", "DarkCyan");
+                                svg2.select('#noteBoundaryL' + n).remove();
+                                svg2.select('#noteBoundaryR' + n).remove();
+                                // svg2.select("#info_note").remove();
+                                // svg2.select("#info_freq").remove();
+                                // svg2.select("#info_time").remove();
+                                svg2.select("#info_note").attr("fill", "transparent");
+                                svg2.select("#info_freq").attr("fill", "transparent");
+                                svg2.select("#info_time").attr("fill", "transparent");
+			    }
+			})
+		    // Play note on click
+                        .on("click", function (d, i) {
+                            // Shift and click to play aligned note(s)
+                            if (d3.event.shiftKey) {
+                                var pair_s = dictT2S_note[i].student.split(" ");
+
+				if (!isNaN(pair_s[0])) {
+				    var noteStartTime = MIDInote_s[pair_s[0]].startTime;
+				    var noteEndTime = Number(MIDInote_s[pair_s[pair_s.length-1]].startTime) + Number(MIDInote_s[pair_s[pair_s.length-1]].duration);
+				    wavesurfer_s.play(noteStartTime, noteEndTime);
+				}
+                            } else {
+			        var noteStartTime = d.startTime;
+			        var noteDurationTime = d.duration;
+			        var noteEndTime = noteStartTime + noteDurationTime;
+			        wavesurfer_t.play(noteStartTime, noteEndTime);
+			    }
+			});
+			}, 100);
+		});
+
+		// Update student MIDI note plot
+		d3.csv(noteSeg_s_update, function(error, data) {
+                    data.forEach(function(d) {
+			d.startTime = +d.startTime;
+			d.pitch = +d.pitch;
+	    		d.duration = +d.duration;
+	    		d.freq = +d.freq;
+	    		d.noteStr = d.noteStr;
+                    });
+
+		    // Remove precious notes
+		    for (i = 0; i < MIDInote_s.length; ++i) {
+			svg2.select("#s"+i).remove();
+		    }
+
+		    // Update with new data
+		    MIDInote_s = data;
+		    
+		    // Sometimes plot doesn't show. Delay seems to be a workaround.
+		    setTimeout(function() {
+
+		    // Plot new notes
+	    	    var MIDInotes = svg2.selectAll("rect.note")
+                        .data(data)
+                        .enter()
+                        .append("rect")
+                        .attr("class", "note");
+
+		    var MIDInoteOffset = 4;    // The vertical center of the note rect is aligned to the pitch
+
+	    	    MIDInotes.attr("x", function(d) {return x_s(d.startTime);})
+	    	        .attr("y", function(d) {return y_s(d.pitch) - MIDInoteOffset;})
+    	                .attr("width", function(d) {return x_s(d.duration);})
+   	                .attr("height", 8)
+        	        .attr("fill", "DarkCyan")
+		        .attr("opacity", 0.7)
+		        .attr("id", function(d, i){var noteid = 's'+i; return noteid; })    // Note ID for alignment visualization
+		        .on("mouseover", function(d, i) {
+			    // Hide focus line
+			    svg1.select("#focus").style("display", "none");
+			    // Highlight current note
+			    d3.select(this).attr("fill", "Purple");
+			    // Draw note boundary
+			    var note_s = d.pitch
+			    var freq_s = d.freq
+			    var noteStr_s = d.noteStr
+			    var noteStart_s = Number(d3.select(this).attr("x"));
+			    var noteStartTime_s = MIDInote_s[i].startTime;
+			    var noteDuration_s = Number(d3.select(this).attr("width"));
+			    var noteDurationTime_s = MIDInote_s[i].duration;
+			    var noteEnd_s = noteStart_s + noteDuration_s;
+			    var noteEndTime_s = noteStartTime_s + noteDurationTime_s;
+
+			    svg2.append("line")
+			    // .attr("x1", x(d.startTime))
+				.attr("id", "noteBoundaryL")
+				.attr("x1", noteStart_s)
+				.attr("y1", height)
+				.attr("x2", noteStart_s)
+				.attr("y2", 0)
+				.style("stroke", "grey")
+				.style("stroke-dasharray", "3");
+			    svg2.append("line")
+				.attr("id", "noteBoundaryR")
+				.attr("x1", noteEnd_s) 
+				.attr("y1", height)
+				.attr("x2", noteEnd_s)
+				.attr("y2", 0)
+				.style("stroke", "grey")
+				.style("stroke-dasharray", "3");
+
+			    // Print note information
+			    svg2.select("#info_note")
+                                .attr("fill", "grey")
+				.text("Note: " + note_s.toFixed(1) + '(' + noteStr_s + ')');
+			    svg2.select("#info_freq")
+			        .attr("fill", "grey")
+				.text("Freq (Hz): " + freq_s.toFixed(1));
+			    svg2.select("#info_time")
+			        .attr("fill", "grey")
+				.text("Time (s): " + noteStartTime_s.toFixed(2) + ' - ' + (Number(noteStartTime_s.toFixed(2)) + Number(noteDurationTime_s.toFixed(2))).toFixed(2) + ' (' + noteDurationTime_s.toFixed(2) + ')');
+
+
+			    // Act on the aligned note from student
+                            var pair_t = dictS2T_note[i].teacher.split(" ");
+                                numPairNotes = pair_t.length;
+
+			    // In case of multiple notes, print group boundary time
+			    var noteInfoText = "",
+			        freqInfoText = "",
+			        groupTimeBoundaryL,
+			        groupTimeBoundaryR,
+			        groupTimeDuration;
+
+                            for (n = 0; n < numPairNotes; n++) {
+
+				if (isNaN(pair_t[n])) {continue;}
+
+				d3.select("#t"+pair_t[n]).attr("fill", "Purple");
+				var note_t = MIDInote_t[pair_t[n]].pitch;
+				var freq_t = Number(MIDInote_t[pair_t[n]].freq);
+				var noteStr_t = MIDInote_t[pair_t[n]].noteStr;
+				var noteStart_t = Number(d3.select("#t"+pair_t[n]).attr("x"));
+				var noteStartTime_t = MIDInote_t[pair_t[n]].startTime;
+				var noteDuration_t = Number(d3.select("#t"+pair_t[n]).attr("width"));
+				var noteDurationTime_t = MIDInote_t[pair_t[n]].duration;
+				var noteEnd_t = noteStart_t + noteDuration_t;
+				var noteEndTime_t = noteStartTime_t + noteDurationTime_t;
+
+				svg1.append("line")
+				    .attr("id", "noteBoundaryL" + n)
+				    .attr("x1", noteStart_t)
+				    .attr("y1", height)
+				    .attr("x2", noteStart_t)
+				    .attr("y2", 0)
+				    .style("stroke", "grey")
+				    .style("stroke-dasharray", "3");
+				svg1.append("line")
+				    .attr("id", "noteBoundaryR" + n)
+				    .attr("x1", noteEnd_t) 
+				    .attr("y1", height)
+				    .attr("x2", noteEnd_t)
+				    .attr("y2", 0)
+				    .style("stroke", "grey")
+				    .style("stroke-dasharray", "3");
+
+				// Plot note info
+				if (numPairNotes == 1) {
+				    noteInfoText = note_t.toFixed(1) + '(' + noteStr_t + ')';
+				    freqInfoText = freq_t.toFixed(1);
+				    groupTimeBoundaryL = noteStartTime_t.toFixed(2);
+				    groupTimeDuration = noteDurationTime_t.toFixed(2);
+				    groupTimeBoundaryR = Number(groupTimeBoundaryL) + Number(groupTimeDuration);
+				} else {  // More than 1 note
+				    if (n == 0) {
+					noteInfoText = note_t.toFixed(1) + '(' + noteStr_t + ')';
+					freqInfoText = freq_t.toFixed(1);
+					groupTimeBoundaryL = noteStartTime_t.toFixed(2);
+				    } else {
+					noteInfoText = noteInfoText + "\u00A0\u00A0" + note_t.toFixed(1) + '(' + noteStr_t + ')';
+					freqInfoText = freqInfoText + "\u00A0\u00A0" + freq_t.toFixed(1);
+					if (n == numPairNotes - 1) {
+					    groupTimeBoundaryR = (Number(noteStartTime_t.toFixed(2)) + Number(noteDurationTime_t.toFixed(2))).toFixed(2);
+					    groupTimeDuration = (groupTimeBoundaryR - groupTimeBoundaryL).toFixed(2);
+					}
+				    }
+				}
+
+				svg1.select("#info_note")
+                                    .attr("fill", "grey")
+                                    .text("Note: " + noteInfoText);
+				svg1.select("#info_freq")
+                                    .attr("fill", "grey")
+                                    .text("Freq (Hz): " + freqInfoText);
+				svg1.select("#info_time")
+                                    .attr("fill", "grey")
+                                    .text("Time (s): " + groupTimeBoundaryL + ' - ' + groupTimeBoundaryR + ' (' + groupTimeDuration + ')');
+			    }
+			})
+		        .on("mouseout", function(d, i) {
+			    // Show focus line
+			    svg2.select("#focus").style("display", null);
+
+			    d3.select(this).attr("fill", "DarkCyan");
+			    svg2.select('#noteBoundaryL').remove();
+			    svg2.select('#noteBoundaryR').remove();
+			    svg2.select("#info_note").attr("fill", "transparent");
+			    svg2.select("#info_freq").attr("fill", "transparent");
+			    svg2.select("#info_time").attr("fill", "transparent");
+
+			    // Act on the aligned note from student
+                            var pair_t = dictS2T_note[i].teacher.split(" ");
+                                numPairNotes = pair_t.length;
+
+                            for (n = 0; n < numPairNotes; n++) {
+                                if (isNaN(pair_t[n])) {continue;}
+			        
+				svg1.select("#t"+pair_t[n]).attr("fill", "DarkCyan");
+				svg1.select('#noteBoundaryL' + n).remove();
+				svg1.select('#noteBoundaryR' + n).remove();
+				svg1.select("#info_note").attr("fill", "transparent");
+				svg1.select("#info_freq").attr("fill", "transparent");
+				svg1.select("#info_time").attr("fill", "transparent");					     }
+			})
+		    // Play note on click
+                        .on("click", function (d, i) {
+                            // Shift and click to play aligned note(s)
+                            if (d3.event.shiftKey) {
+                                var pair_t = dictS2T_note[i].teacher.split(" ");
+
+				if (!isNaN(pair_t[0])) {
+				    var noteStartTime = MIDInote_t[pair_t[0]].startTime;
+				    var noteEndTime = Number(MIDInote_t[pair_t[pair_t.length-1]].startTime) + Number(MIDInote_t[pair_t[pair_t.length-1]].duration);
+				    wavesurfer_t.play(noteStartTime, noteEndTime);
+				}
+                            } else {
+			        var noteStartTime = d.startTime;
+			        var noteDurationTime = d.duration;
+			        var noteEndTime = noteStartTime + noteDurationTime;
+			        wavesurfer_s.play(noteStartTime, noteEndTime);
+			    }
+			});
+		}, 100);
+		});
+
+		// });
+	    }
+
+            // Function to move element on top
+            d3.selection.prototype.moveToFront = function() {
+                return this.each(function(){
+            	this.parentNode.appendChild(this);
+                });
+            };
+
+///////////////////////////////////////////////////
+///// Update plot when new phrase is selected
+///////////////////////////////////////////////////
+            function updatePhrase (phraseNum) {
+		console.log(phraseNum);
+        
+        phraseNumber = phraseNum;
+
+		// Update data file path
+		pitchtrack_t_default = "data/exampleFiles/" + phraseNum + "/teacher_regression_pitchtrack.csv";
+		pitchtrack_s_default = "data/exampleFiles/" + phraseNum + "/student_regression_pitchtrack.csv";
+		noteSeg_t_default = "data/exampleFiles/" + phraseNum + "/teacher_monoNoteOut_midi.csv";
+		noteSeg_s_default = "data/exampleFiles/" + phraseNum + "/student_monoNoteOut_midi.csv";
+		noteAlign_T2S_default = "data/exampleFiles/" + phraseNum + "/teacher_noteAligned.csv";
+		noteAlign_S2T_default = "data/exampleFiles/" + phraseNum + "/student_noteAligned.csv";
+		audio_t_default = "data/exampleFiles/" + phraseNum + "/teacher.mp3";
+		audio_s_default = "data/exampleFiles/" + phraseNum + "/student.mp3";
+		pitchSeg_t_default = "data/exampleFiles/" + phraseNum + "/teacher_refinedSeg.csv";
+		pitchSeg_s_default = "data/exampleFiles/" + phraseNum + "/student_refinedSeg.csv";
+		pitchSegAlign_T2S_default = "data/exampleFiles/" + phraseNum + "/teacher_segAligned.csv";
+		pitchSegAlign_S2T_default = "data/exampleFiles/" + phraseNum + "/student_segAligned.csv";
+		pitchtrack_t_update = pitchtrack_t_default;
+		noteSeg_t_update = noteSeg_t_default;
+		audio_t_update = audio_t_default;
+		pitchSeg_t_update = pitchSeg_t_default;
+
+		// Update plot with new phrase
+		updateData (pitchtrack_t_default, pitchtrack_s_default, noteSeg_t_default, noteSeg_s_default, noteAlign_T2S_default, noteAlign_S2T_default, audio_t_default, audio_s_default, pitchSeg_t_default, pitchSeg_s_default, pitchSegAlign_T2S_default, pitchSegAlign_S2T_default);
+	    }
+
+        </script>
+    </body>
+</html>     
+
