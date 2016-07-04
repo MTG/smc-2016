@@ -1,7 +1,7 @@
 # Beijing opera singing intonation analysis and education tool
 
 
-The online tool can be accessed at [https://dunya.compmusic.upf.edu/jingju-icassp-2016/](https://dunya.compmusic.upf.edu/jingju-icassp-2016/)
+The online tool can be accessed at [https://dunya.compmusic.upf.edu/smc-2016/](https://dunya.compmusic.upf.edu/smc-2016/)
 
 Music Technology Group, Universitat Pompeu Fabra, Barcelona  
 rong.gong@upf.edu, yile.yang@upf.edu  
