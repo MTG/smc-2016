@@ -1,0 +1,21 @@
+version: '2'
+volumes:
+  webroot:
+  data:
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/jingju.conf:/etc/nginx/conf.d/default.conf
+      - webroot:/webroot/
+      - data:/webroot/data
+    depends_on:
+      - web
+  web:
+    build: .
+    volumes:
+      - webroot:/webroot/
+      - data:/data
+    command: python jingju_icassp_server.py
