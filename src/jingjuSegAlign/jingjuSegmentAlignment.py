@@ -1,16 +1,9 @@
-import numpy as np
-import os,sys
+import os
 
-# add src patt
-dir = os.path.dirname(os.path.realpath(__file__))
-srcpath = dir+'/src'
-sys.path.append(srcpath)
+from jingjuSegAlign.src import concatenateSegment as cs
+from jingjuSegAlign.src import dtwSankalp
+from jingjuSegAlign.src import alignment as align
 
-import concatenateSegment as cs
-import dtwRong
-import dtwSankalp
-import plottingCode as pc
-import alignment as align
 
 def jingjuSegmentAlignment(phraseNumber):
     # definition

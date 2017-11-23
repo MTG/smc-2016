@@ -3,7 +3,6 @@ calculate the vibrato section, vibrato frequence and extend
 '''
 import essentia.standard as ess
 import numpy as np
-import matplotlib.pyplot as plt
 
 def vibrato(pitch):
     sampleRate = 44100/256

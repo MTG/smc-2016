@@ -1,33 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
-import sys, os
+import os
 import time
-#import shutil
-#import random
-#import matplotlib.pyplot as plt
-#import json
 
-# add pYin src path
-#pYinPath = '../pypYIN/src'
-#sys.path.append(pYinPath)
-#from pYINPtNote import pYINPtNote
+from jingjuElemSeg.src import noteClass as nc
+from jingjuElemSeg.src import trainTestKNN as ttknn
+from jingjuElemSeg.src import refinedSegmentsManipulation as rsm
 
-# add src path
-dir = os.path.dirname(os.path.realpath(__file__))
-srcpath = dir+'/src'
-sys.path.append(srcpath)
-
-
-import noteClass as nc
-import trainTestKNN as ttknn
-import refinedSegmentsManipulation as rsm
-import evaluation as evalu
-
-#from vibrato import vibrato
-#import pitchtrackSegByNotes
-#import essentia.standard as ess
-#import numpy as np
-#import featureVecTarget as fvt
 
 def jingjuElementSegmentation():
 

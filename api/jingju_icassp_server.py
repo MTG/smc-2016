@@ -10,10 +10,8 @@ from flask import Flask, request, jsonify, current_app
 from flask_cors import CORS
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../src'))
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../src/jingjuElemSeg'))
-from jingjuElementSegmentation import jingjuElementSegmentation
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../src/jingjuSegAlign'))
-from jingjuSegmentAlignment import jingjuSegmentAlignment
+from jingjuElemSeg.jingjuElementSegmentation import jingjuElementSegmentation
+from jingjuSegAlign.jingjuSegmentAlignment import jingjuSegmentAlignment
 
 app = Flask(__name__)
 CORS(app)

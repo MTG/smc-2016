@@ -3,7 +3,7 @@ import noteClass as nc
 import numpy as np
 import copy
 import utilFunc as uf
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pitchtrackSegByNotes as ptSeg
 import evaluation as evalu
 

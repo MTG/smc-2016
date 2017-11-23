@@ -1,6 +1,6 @@
 import os,json
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import utilFunc as uf
 import evaluation as evalu
 import pitchtrackSegByNotes
