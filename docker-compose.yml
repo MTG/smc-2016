@@ -18,4 +18,6 @@ services:
     volumes:
       - webroot:/webroot/
       - data:/data
+      - ./src:/src
+      - ./api:/code
     command: python jingju_icassp_server.py
