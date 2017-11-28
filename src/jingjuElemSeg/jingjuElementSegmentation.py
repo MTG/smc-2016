@@ -9,7 +9,7 @@ from jingjuElemSeg.src import trainTestKNN as ttknn
 from jingjuElemSeg.src import refinedSegmentsManipulation as rsm
 
 
-def jingjuElementSegmentation():
+def jingjuElementSegmentation(workdir):
 
     start_time = time.time()  # starting time
     '''
@@ -21,30 +21,33 @@ def jingjuElementSegmentation():
     '''
 
     ############################################## initialsation #######################################################
-    pitchtrackNoteTrainFolderPath = os.path.join(dir, 'pYinOut/laosheng/train/')
 
     # classification training ground truth
     # groundtruthNoteLevelPath = '/Users/gong/Documents/pycharmProjects/jingjuSegPic/laosheng/train/pyinNoteCurvefit/classified'
     # groundtruthNoteDetailPath = '/Users/gong/Documents/pycharmProjects/jingjuSegPic/laosheng/train/refinedSegmentCurvefit/classified'
 
     # classification model path
-    pitchContourClassificationModelName = os.path.join(dir,'pYinOut/laosheng/train/model/pitchContourClassificationModel.pkl')
+    pitchContourClassificationModelName = '/data/pYinOut/laosheng/train/model/pitchContourClassificationModel.pkl'
 
     # feature, target folders train
     # featureVecTrainFolderPath = os.path.join(dir,'pYinOut/laosheng/train/featureVec/')
     # targetTrainFolderPath = os.path.join(dir,'pYinOut/laosheng/train/target/')
 
     # predict folders
-    pitchtrackNotePredictFolderPath = os.path.join(dir,'../../data/updateFiles/')
-    #pitchtrackNotePredictFolderPath = os.path.join(dir,'pYinOut/laosheng/predict/)
-    featureVecPredictFolderPath = os.path.join(dir,'pYinOut/laosheng/predict/featureVec/')
-    targetPredictFolderPath = os.path.join(dir,'pYinOut/laosheng/predict/target/')
-
+    pitchtrackNotePredictFolderPath = workdir
+    featureVecPredictFolderPath = os.path.join(workdir, 'predict/featureVec/')
+    targetPredictFolderPath = os.path.join(workdir, 'predict/target/')
+    try:
+        os.makedirs(featureVecPredictFolderPath)
+    except OSError:
+        pass
+    try:
+        os.makedirs(targetPredictFolderPath)
+    except OSError:
+        pass
 
     # recordingNamesTrain = ['male_02_neg_1', 'male_12_neg_1', 'male_12_pos_1', 'male_13_pos_1', 'male_13_pos_3']
     recordingNamesPredict = ['student']
-
-    evaluation = False                      #  parameters grid search
 
     slopeTh = 60.0                          #  contour combination slope difference threshold
     flatnoteTh = 80.0                       #  threshold for deciding one note as flat pitch note
@@ -57,31 +60,31 @@ def jingjuElementSegmentation():
                                           featureVecPredictFolderPath,
                                           pitchtrackNotePredictFolderPath,
                                           recordingNamesPredict,
-                                          segCoef=0.3137,predict=True)
+                                          segCoef=0.3137, predict=True)
 
     # predict
     ttknn2 = ttknn.TrainTestKNN()
-    ttknn2.predict(pitchContourClassificationModelName,featureVecPredictFolderPath,
-                   targetPredictFolderPath,recordingNamesPredict)
+    ttknn2.predict(pitchContourClassificationModelName, featureVecPredictFolderPath,
+                   targetPredictFolderPath, recordingNamesPredict)
 
 
     ########################################### representation #########################################################
     for rm in recordingNamesPredict:
         #  filename declaration
-        originalPitchtrackFilename = pitchtrackNotePredictFolderPath+rm+'_pitchtrack.csv'
-        targetFilename = targetPredictFolderPath+rm+'.json'
-        refinedSegmentFeaturesFilename = pitchtrackNotePredictFolderPath+rm+'_refinedSegmentFeatures.json'
-        representationFilename = pitchtrackNotePredictFolderPath+rm+'_representation.json'
-        figureFilename = pitchtrackNotePredictFolderPath+rm+'_reprensentationContourFigure.png'
+        originalPitchtrackFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_pitchtrack.csv')
+        targetFilename = os.path.join(targetPredictFolderPath, rm+'.json')
+        refinedSegmentFeaturesFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_refinedSegmentFeatures.json')
+        representationFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_representation.json')
+        figureFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_reprensentationContourFigure.png')
 
         # important txt files!!
-        regressionPitchtrackFilename = pitchtrackNotePredictFolderPath+rm+'_regression_pitchtrack.csv'
-        refinedSegmentationGroundtruthFilename = pitchtrackNotePredictFolderPath+rm+'_refinedSeg.csv'
+        regressionPitchtrackFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_regression_pitchtrack.csv')
+        refinedSegmentationGroundtruthFilename = os.path.join(pitchtrackNotePredictFolderPath, rm+'_refinedSeg.csv')
 
         rsm1 = rsm.RefinedSegmentsManipulation()
-        rsm1.process(refinedSegmentFeaturesFilename,targetFilename,
-                     representationFilename,figureFilename,regressionPitchtrackFilename,
-                     originalPitchtrackFilename = originalPitchtrackFilename,
+        rsm1.process(refinedSegmentFeaturesFilename, targetFilename,
+                     representationFilename, figureFilename, regressionPitchtrackFilename,
+                     originalPitchtrackFilename=originalPitchtrackFilename,
                      refinedSegGroundtruthFilename=refinedSegmentationGroundtruthFilename,
                      slopeTh=slopeTh, flatnoteTh=flatnoteTh)
 
@@ -89,8 +92,3 @@ def jingjuElementSegmentation():
     # print("--- %s seconds ---" % (time.time() - start_time))
 
     return runningTime
-
-
-
-
-

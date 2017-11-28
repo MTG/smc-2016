@@ -108,15 +108,24 @@
                 contentType: false
             }).done(function(data) {
                 console.log("Got the callback!!");
-                seg_info = data;
+                var data_root = data['data_root'].substr(1);
                 // Update data visualization
-                //console.log(pitchtrack_t_update, pitchtrack_s_update, noteSeg_t_update, noteSeg_s_update);
+
+                noteAlign_T2S_update = data_root + '/teacher_noteAligned.csv ';
+                noteAlign_S2T_update = data_root + '/student_noteAligned.csv';
+                pitchSeg_s_update = data_root + '/student_refinedSeg.csv';
+                pitchSegAlign_T2S_update = data_root + '/teacher_segAligned.csv';
+				pitchSegAlign_S2T_update = data_root + '/student_segAligned.csv';
+				pitchtrack_s_update = data_root + '/student_regression_pitchtrack.csv';
+				noteSeg_s_update = data_root + '/student_monoNoteOut_midi.csv';
+				audio_s_update = data_root + '/student.mp3';
+
 	        	updateData(pitchtrack_t_update, pitchtrack_s_update, noteSeg_t_update, noteSeg_s_update, noteAlign_T2S_update, noteAlign_S2T_update, audio_t_update, audio_s_update, pitchSeg_t_update, pitchSeg_s_update, pitchSegAlign_T2S_update, pitchSegAlign_S2T_update);
         		// Update recordingInfo
                 document.getElementById("recordingInfo").innerHTML = "Computing finished. Click and hold to record again.";
 
         		// playBackWithDelay();
-        		console.log(seg_info);
+        		// console.log(seg_info);
             });
             //console.log(e.slice(0));
 		    //Recorder.forceDownload(e, "filename.wav");

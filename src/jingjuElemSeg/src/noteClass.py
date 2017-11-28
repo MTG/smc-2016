@@ -666,13 +666,13 @@ class noteClass(object):
             COnOffall, COnall, OBOnall, OBOffall,gt,st = 0,0,0,0,0,0
 
         for rn in recordingNames:
-            pitchtrack_filename = pitchtrackNoteFolderPath+rn+'_pitchtrack.csv'
-            monoNoteOut_filename = pitchtrackNoteFolderPath+rn+'_monoNoteOut.csv'
+            pitchtrack_filename = os.path.join(pitchtrackNoteFolderPath, rn+'_pitchtrack.csv')
+            monoNoteOut_filename = os.path.join(pitchtrackNoteFolderPath, rn+'_monoNoteOut.csv')
 
             ptSeg.doSegmentationForPyinVamp(pitchtrack_filename, monoNoteOut_filename)
 
             if evaluation:
-                coarseSegmentation_filename = pitchtrackNoteFolderPath+rn+'_coarseSeg.txt'
+                coarseSegmentation_filename = os.path.join(pitchtrackNoteFolderPath, rn+'_coarseSeg.txt')
                 ptSeg.coarseSegmentation(monoNoteOut_filename,coarseSegmentation_filename)      #  groundtruth segmentation
 
             # ptSeg.pltNotePitchtrack(saveFig=True, figFolder='../jingjuSegPic/laosheng/train/male_13/pos_3_midinote/')
@@ -746,7 +746,7 @@ class noteClass(object):
                 st += len(segmentsExport.values())
 
             # write feature into json
-            featureFilename = featureVecFolderPath+rn+'.json'
+            featureFilename = os.path.join(featureVecFolderPath, '%s.json' % rn)
             with open(featureFilename, 'w') as outfile:
                 json.dump(featureDict, outfile)
 
@@ -754,7 +754,8 @@ class noteClass(object):
                 # output segments boundary frames pitch contours
                 outJsonDict = {'refinedPitchcontours':refinedPitchcontours,'boundary':segmentsExport,
                                'extremas':extremas,'vibrato':vibrato}
-                with open(pitchtrackNotePredictFolderPath+rn+'_refinedSegmentFeatures.json', "w") as outfile:
+                refined_segment_filename = os.path.join(pitchtrackNotePredictFolderPath, '%s_refinedSegmentFeatures.json' % rn)
+                with open(refined_segment_filename, "w") as outfile:
                     json.dump(outJsonDict,outfile)
                     # for se in segmentsExport:
                     #     # outfile.write(str(int(se[0]))+'\t'+str(se[1])+'\n')

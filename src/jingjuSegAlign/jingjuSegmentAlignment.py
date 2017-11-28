@@ -1,31 +1,31 @@
 import os
+import tempfile
 
 from jingjuSegAlign.src import concatenateSegment as cs
 from jingjuSegAlign.src import dtwSankalp
 from jingjuSegAlign.src import alignment as align
 
 
-def jingjuSegmentAlignment(phraseNumber):
+def jingjuSegmentAlignment(phraseNumber, updateFolder):
     # definition
-    exampleFolder = os.path.join(dir,'../../data/exampleFiles/'+phraseNumber+'/')
-    updateFolder = os.path.join(dir,'../../data/updateFiles/')
+    exampleFolder = os.path.join('/data/exampleFiles/', phraseNumber)
 
     teacherTitle = 'teacher'
     studentTitle = 'student'
 
-    teacherMonoNoteOutFilename = exampleFolder+teacherTitle+'_monoNoteOut.csv'
-    studentMonoNoteOutFilename = updateFolder+studentTitle+'_monoNoteOut.csv'
+    teacherMonoNoteOutFilename = os.path.join(exampleFolder, teacherTitle+'_monoNoteOut.csv')
+    studentMonoNoteOutFilename = os.path.join(updateFolder, studentTitle+'_monoNoteOut.csv')
 
-    teacherRepresentationFilename = exampleFolder+teacherTitle+'_representation.json'
-    studentRepresentationFilename = updateFolder+studentTitle+'_representation.json'
+    teacherRepresentationFilename = os.path.join(exampleFolder, teacherTitle+'_representation.json')
+    studentRepresentationFilename = os.path.join(updateFolder, studentTitle+'_representation.json')
 
     # output file name
 
-    teacherNoteAlignedFilename = updateFolder+teacherTitle+'_noteAligned.csv'
-    studentNoteAlignedFilename = updateFolder+studentTitle+'_noteAligned.csv'
+    teacherNoteAlignedFilename = os.path.join(updateFolder, teacherTitle+'_noteAligned.csv')
+    studentNoteAlignedFilename = os.path.join(updateFolder, studentTitle+'_noteAligned.csv')
 
-    teacherSegAlignedFilename = updateFolder+teacherTitle+'_segAligned.csv'
-    studentSegAlignedFilename = updateFolder+studentTitle+'_segAligned.csv'
+    teacherSegAlignedFilename = os.path.join(updateFolder, teacherTitle+'_segAligned.csv')
+    studentSegAlignedFilename = os.path.join(updateFolder, studentTitle+'_segAligned.csv')
 
     cs1 = cs.ConcatenateSegment()
     align1 = align.Alignment()
@@ -80,18 +80,18 @@ def jingjuSegmentAlignment(phraseNumber):
 
     # get path index for each note
     noteStartingFramePath_t, noteEndingFramePath_t \
-        = align1.getPathIndex(path_t,noteStartingFrameConcatenate_t,noteEndingFrameConcatenate_t)
+        = align1.getPathIndex(path_t, noteStartingFrameConcatenate_t, noteEndingFrameConcatenate_t)
     noteStartingFramePath_s, noteEndingFramePath_s \
-        = align1.getPathIndex(path_s,noteStartingFrameConcatenate_s,noteEndingFrameConcatenate_s)
+        = align1.getPathIndex(path_s, noteStartingFrameConcatenate_s, noteEndingFrameConcatenate_s)
     print 'getPathIndex done'
 
 
     # alignment
     alignedNote_t = align1.alignment2(noteStartingFramePath_t, noteEndingFramePath_t,
-                                noteStartingFramePath_s, noteEndingFramePath_s)
+                                      noteStartingFramePath_s, noteEndingFramePath_s)
 
     alignedNote_s = align1.alignment2(noteStartingFramePath_s, noteEndingFramePath_s,
-                                noteStartingFramePath_t, noteEndingFramePath_t)
+                                      noteStartingFramePath_t, noteEndingFramePath_t)
 
     print 'alignment done'
 
@@ -103,11 +103,11 @@ def jingjuSegmentAlignment(phraseNumber):
 
     ############################################ segmentation alignment ####################################################
 
-    segmentPts_t,boundaries_t,target_t = cs1.readRepresentation(teacherRepresentationFilename)
-    segmentPts_s,boundaries_s,target_s = cs1.readRepresentation(studentRepresentationFilename)
+    segmentPts_t, boundaries_t, target_t = cs1.readRepresentation(teacherRepresentationFilename)
+    segmentPts_s, boundaries_s, target_s = cs1.readRepresentation(studentRepresentationFilename)
 
-    concatenatePts_t,segStartingFrame_t,segEndingFrame_t = cs1.concatenate(segmentPts_t)
-    concatenatePts_s,segStartingFrame_s,segEndingFrame_s = cs1.concatenate(segmentPts_s)
+    concatenatePts_t, segStartingFrame_t, segEndingFrame_t = cs1.concatenate(segmentPts_t)
+    concatenatePts_s, segStartingFrame_s, segEndingFrame_s = cs1.concatenate(segmentPts_s)
 
     concatenatePts_t = cs1.pitchtrackNormalization(concatenatePts_t)
     concatenatePts_s = cs1.pitchtrackNormalization(concatenatePts_s)
@@ -122,7 +122,7 @@ def jingjuSegmentAlignment(phraseNumber):
 
     # do dtw
     #dist, D, path = dtwRong.dtw(concatenatePts_t,concatenatePts_s)
-    path = dtwSankalp.dtw1d_generic(concatenatePts_t,concatenatePts_s)
+    path = dtwSankalp.dtw1d_generic(concatenatePts_t, concatenatePts_s)
     path_t = path[0]
     path_s = path[1]
 
@@ -144,16 +144,16 @@ def jingjuSegmentAlignment(phraseNumber):
 
     # get path index for each note
     segStartingFramePath_t, segEndingFramePath_t \
-        = align1.getPathIndex(path_t,segStartingFrame_t,segEndingFrame_t)
+        = align1.getPathIndex(path_t, segStartingFrame_t, segEndingFrame_t)
     segStartingFramePath_s, segEndingFramePath_s \
-        = align1.getPathIndex(path_s,segStartingFrame_s,segEndingFrame_s)
+        = align1.getPathIndex(path_s, segStartingFrame_s, segEndingFrame_s)
 
     # alignment
     alignedSeg_t = align1.alignment2(segStartingFramePath_t, segEndingFramePath_t,
-                                    segStartingFramePath_s, segEndingFramePath_s)
+                                     segStartingFramePath_s, segEndingFramePath_s)
 
     alignedSeg_s = align1.alignment2(segStartingFramePath_s, segEndingFramePath_s,
-                                    segStartingFramePath_t, segEndingFramePath_t)
+                                     segStartingFramePath_t, segEndingFramePath_t)
 
     # print alignedSeg_t, alignedSeg_s
 
@@ -171,23 +171,23 @@ def jingjuSegmentAlignment(phraseNumber):
     with open(teacherNoteAlignedFilename, 'w+') as outfile:
         outfile.write('teacher'+','+'student'+'\n')
         for al in alignedNote_t:
-	    alignStr = stral(al[1]) if al[1] else 'null'
+            alignStr = stral(al[1]) if al[1] else 'null'
             outfile.write(str(al[0])+','+alignStr+'\n')
 
     with open(studentNoteAlignedFilename, 'w+') as outfile:
         outfile.write('student'+','+'teacher'+'\n')
         for al in alignedNote_s:
-	    alignStr = stral(al[1]) if al[1] else 'null'
+            alignStr = stral(al[1]) if al[1] else 'null'
             outfile.write(str(al[0])+','+alignStr+'\n')
 
     with open(teacherSegAlignedFilename, 'w+') as outfile:
         outfile.write('teacher'+','+'student'+'\n')
         for al in alignedSeg_t:
-	    alignStr = stral(al[1]) if al[1] else 'null'
+            alignStr = stral(al[1]) if al[1] else 'null'
             outfile.write(str(al[0])+','+alignStr+'\n')
 
     with open(studentSegAlignedFilename, 'w+') as outfile:
         outfile.write('student'+','+'teacher'+'\n')
         for al in alignedSeg_s:
-	    alignStr = stral(al[1]) if al[1] else 'null'
+            alignStr = stral(al[1]) if al[1] else 'null'
             outfile.write(str(al[0])+','+alignStr+'\n')

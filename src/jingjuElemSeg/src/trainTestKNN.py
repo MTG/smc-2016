@@ -6,6 +6,7 @@ import operator
 import json
 from sklearn.externals import joblib
 from sklearn import neighbors
+import os
 # import matplotlib.pyplot as plt
 
 class TrainTestKNN(object):

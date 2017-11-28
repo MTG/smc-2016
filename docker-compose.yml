@@ -20,4 +20,6 @@ services:
       - data:/data
       - ./src:/src
       - ./api:/code
+    environment:
+      - APP_DATA_DIR=/data
     command: python jingju_icassp_server.py
