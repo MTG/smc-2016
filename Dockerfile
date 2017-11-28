@@ -9,6 +9,9 @@ RUN mkdir /data
 RUN mkdir /src
 WORKDIR /code
 
+RUN mkdir -p /usr/local/lib/vamp
+ADD api/pyin.so /usr/local/lib/vamp
+
 COPY requirements.txt /code
 RUN pip --no-cache-dir install -r requirements.txt
 
