@@ -1,15 +1,10 @@
 click==6.7
-Flask==0.12.2
-flask-cors==3.0.3
-itsdangerous==0.24
-Jinja2==2.10
-MarkupSafe==1.0
+Flask==1.1.1
+flask-cors==3.0.7
 matplotlib==2.1.0
 # Same version of numpy on the mtgupf/essentia:debian image installed with apt
-numpy==1.8.2
+numpy==1.12.1
 scipy==1.0.0
 # Needs to be binary-compatible with model pickles. Don't upgrade.
 scikit-learn==0.15.2
-six==1.11.0
-virtualenv==15.1.0
-Werkzeug==0.12.2
+six==1.14.0

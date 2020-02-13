@@ -1,4 +1,4 @@
-FROM mtgupf/essentia:debian
+FROM mtgupf/essentia:stretch-python2
 
 # Use apt-get to install pip even though it's old, because it pulls in a bunch of dependencies
 RUN apt-get update && apt-get install -y python-pip python-dev libqt5xml5 libqt5network5 && rm -rf /var/lib/apt/lists*
